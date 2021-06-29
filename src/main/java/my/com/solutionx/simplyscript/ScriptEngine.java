@@ -5,9 +5,14 @@
  */
 package my.com.solutionx.simplyscript;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.script.ScriptContext;
 import javax.script.ScriptException;
@@ -30,27 +35,53 @@ public final class ScriptEngine {
     public ScriptEngine() throws ScriptException, IOException, PoolException, InterruptedException {
         factory = new NashornScriptEngineFactory();
         engine = (NashornScriptEngine) factory.getScriptEngine(new String[] { "--optimistic-types=false", "--language=es6" });
-        globalCtx = new ScriptGlobalObject(this);
+
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Object> mapModuleConfig = mapper.readValue(new FileReader("config/scripts/module_conf.json"),
+                Map.class);
+        Map<String, Object> mapServiceConfig = mapper.readValue(new FileReader("config/scripts/service_conf.json"),
+                Map.class);
+        Map<String, Object> mapConfig = new HashMap<>();
+        mapConfig.put("module", mapModuleConfig);
+        mapConfig.put("service", mapServiceConfig);
+
+        globalCtx = new ScriptGlobalObject(this, mapConfig);
         PoolableScriptContextAllocator allocator = new PoolableScriptContextAllocator(globalCtx);
         poolContext = Pool.from(allocator).build();
 
-/*
+
         Timeout timeout = new Timeout(60, TimeUnit.SECONDS);
         PoolableScriptContext scriptContext = poolContext.claim(timeout);
         try {
-            ScriptContext scriptCtx = scriptContext.getScriptContext();
+            ScriptLocalObject ctx = scriptContext.getScriptContext();
+            List<String> preload = (List<String>)mapServiceConfig.get("preload");
+            if (preload != null) {
+                for (String service : preload) {
+                    ctx.service(service);
+                }
+            }
+
+            preload = (List<String>)mapModuleConfig.get("preload");
+            if (preload != null) {
+                for (String service : preload) {
+                    ctx.module(service);
+                }
+            }
+/*
+            scriptCtx.
             Object ret = engine.eval("moment(new Date()).format('DD-MMM-YYYY')", scriptCtx);
             System.out.println(ret);
             ret = engine.eval("numeral('1000.3333').format('0,0.00');", scriptCtx);
             System.out.println(ret);
 
             engine.eval("moment(new Date()).format('DD-MMM-YYYY')", scriptCtx);
+*/
         } finally {
             if (scriptContext != null) {
               scriptContext.release();
             }
         }
-
+/*
         Object ret = getService("db");
         System.out.printf("Service: %s%n", ret);
         ret = action("CallTest.test", null);

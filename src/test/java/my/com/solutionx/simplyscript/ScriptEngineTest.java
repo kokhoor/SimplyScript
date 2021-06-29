@@ -30,5 +30,6 @@ public class ScriptEngineTest {
         Assert.assertNotNull(engine);
         engine.action("Alert.test");
         engine.action("Alert.out", "abcdefg");
+        engine.action("CallTest.test", "abcdefg");
     }
 }

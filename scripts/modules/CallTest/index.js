@@ -9,6 +9,13 @@
       throw e;
     }
     print("Have db: " + db);
+    if (db != null) {
+      var cursor = db.selectCursor("selectUser");
+      for (const row of cursor) {
+        console.log(`${row.username}`)
+      }
+      cursor.close();
+    }
     var db2 = ctx.db('test', ctx.DB_NEW);
     print("Have db2: " + db2);
     var db_same = ctx.db('test', ctx.DB);

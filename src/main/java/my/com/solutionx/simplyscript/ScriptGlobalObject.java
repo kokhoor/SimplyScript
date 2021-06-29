@@ -15,14 +15,9 @@
  */
 package my.com.solutionx.simplyscript;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.script.CompiledScript;
@@ -49,7 +44,7 @@ public class ScriptGlobalObject {
     CompiledScript initScript = null;
     ScriptObjectMirror ctxConstructor = null;
 
-    public ScriptGlobalObject(ScriptEngine engine) throws ScriptException, FileNotFoundException, IOException {
+    public ScriptGlobalObject(ScriptEngine engine, Map<String, Object> mapConfig) throws ScriptException {
         super();
         this.engine = new WeakReference(engine);
         ScriptContext currentCtx = new SimpleScriptContext();
@@ -59,17 +54,9 @@ public class ScriptGlobalObject {
         ScriptObjectMirror fnCtxFactory = (ScriptObjectMirror)engine.eval("load('scripts/system/setup_env.js')", currentCtx);
         ScriptObjectMirror ctxFactoryRet = (ScriptObjectMirror)fnCtxFactory.call(fnCtxFactory);
         ctxConstructor = (ScriptObjectMirror)ctxFactoryRet;
-        ObjectMapper mapper = new ObjectMapper();
-        Map<String, Object> mapModuleConfig = mapper.readValue(new FileReader("config/scripts/module_conf.json"),
-                Map.class);
-        Map<String, Object> mapServiceConfig = mapper.readValue(new FileReader("config/scripts/service_conf.json"),
-                Map.class);
-        Map<String, Object> mapConfig = new HashMap<>();
-        mapConfig.put("module", mapModuleConfig);
-        mapConfig.put("service", mapServiceConfig);
         ctxFactoryRet.callMember("config", mapConfig);
     }
-    
+
     public CompiledScript initScript() {
         return initScript;
     }

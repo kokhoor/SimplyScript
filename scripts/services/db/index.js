@@ -121,7 +121,6 @@ db.prototype = {
 };
 var service = new db();
 service.init();
-print("In setup have factory?" + _.dbFactories);
 return service;
 
 }());

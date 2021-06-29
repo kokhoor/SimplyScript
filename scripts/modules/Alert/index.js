@@ -2,7 +2,7 @@
     x: 5,
     out(str) {
         print(`Alert:
-${str} ${this.x}`);
+${JSON.stringify(str)} ${this.x}`);
     },
     test() {
         print(`This is a test: ${"abc".startsWith("ab")} :

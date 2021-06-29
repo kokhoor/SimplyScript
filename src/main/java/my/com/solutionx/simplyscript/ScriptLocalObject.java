@@ -21,6 +21,7 @@ import java.util.Map;
 import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
+import org.openjdk.nashorn.internal.runtime.Undefined;
 
 /**
  *
@@ -75,7 +76,10 @@ public class ScriptLocalObject extends SimpleScriptContext {
         ScriptObjectMirror obj = (ScriptObjectMirror)global.get().service(key);
         if (obj == null) {
             ScriptObjectMirror ctxObject = global.get().ctxConstructor();
-            obj = (ScriptObjectMirror) ctxObject.callMember("serviceSetup", key, global.get().system);
+            Object ret = ctxObject.callMember("serviceSetup", key, global.get().system);
+            if (ret == null || ret.getClass() == Undefined.class)
+                throw new RuntimeException("Service cannot be setup: " + key);
+            obj = (ScriptObjectMirror) ret;
             global.get().service(key, obj);
         }
         return obj;

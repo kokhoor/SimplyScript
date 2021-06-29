@@ -112,6 +112,7 @@ ctxObject.serviceSetup = function(serviceName, system) {
       }
     }
   }
+  return service;
 };
 
 ctxObject.moduleSetup = function (moduleName) {
