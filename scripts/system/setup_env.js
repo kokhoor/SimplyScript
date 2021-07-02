@@ -83,8 +83,15 @@ ctxObject.serviceSetup = function(serviceName, system) {
     }
   }
 
+  var scriptName = serviceName;
+  if (this._config.service.map != null) {
+    var mappedScript = this._config.service.map[serviceName];
+    if (mappedScript != null)
+      scriptName = mappedScript;
+  }
+
   var setupData = null;
-  var service = load(`${this._config.service.path}/${serviceName}/index.js`);
+  var service = load(`${this._config.service.path}/${scriptName}/index.js`);
   if (service == null)
     return null;
 
@@ -94,10 +101,8 @@ ctxObject.serviceSetup = function(serviceName, system) {
   if (setupData == null)
     return service;
 
-  if (setupData.contextPrototypes != null) {
-    for (var key in setupData.contextPrototypes) {
-      ctxObject.prototype[key] = setupData.contextPrototypes[key];
-    }
+  if (setupData.contextPrototype != null) {
+    ctxObject.prototype[serviceName] = setupData.contextPrototype;
   }
 
   if (setupData.callbacks != null) {
@@ -128,7 +133,13 @@ ctxObject.moduleSetup = function (moduleName) {
     }
   }
 
-  var module = load(`${this._config.module.path}/${moduleName}/index.js`);
+  var scriptName = moduleName;
+  if (this._config.module.map != null) {
+    var mappedScript = this._config.module.map[moduleName];
+    if (mappedScript != null)
+      scriptName = mappedScript;
+  }
+  var module = load(`${this._config.module.path}/${scriptName}/index.js`);
   return module;
 };
 

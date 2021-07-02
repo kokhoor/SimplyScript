@@ -14,20 +14,11 @@ db.prototype = {
     this.factoryBuilder = Java.type('org.apache.ibatis.session.SqlSessionFactoryBuilder');
   },
   setup() {
+    let db = curry_pre([this], this.db);
+    db.DB = this.DB;
+    db.DB_NEW = this.DB_NEW;
     return {
-      contextPrototypes: {
-        DB: this.DB,
-        DB_NEW: this.DB_NEW,
-        db: curry_pre([this], this.db)
-        /*(function (_this) {
-          return function () {
-            var fn = _this.db;
-            var args = Array.prototype.slice.call(arguments);
-            args.unshift(_this);
-            return fn.apply( this, args);
-          };
-        })(this)*/
-      },
+      contextPrototype: db,
       callbacks: {
         postInnerCall: this.postInnerCall,
         postCall: this.postCall          
@@ -82,14 +73,15 @@ db.prototype = {
     }
   },
   db(me, dbName, txType, ctx) {
+// console.log("in db: " + this.call + ":" + me.call + ":" + dbName + ":" + txType + ":" + me.DB + ":" + me.DB_NEW);
 // print(me + ":" + dbName + ":" + txType + ":" + ctx);
 // print(txType + ":" + this + ":" + this.DB + ":" + this.DB_NEW + ":" + me.DB + ":" + me.DB_NEW);
     if (ctx == null)
       ctx = this;
     if (txType == null)
-      txType = this.DB;
+      txType = me.DB;
     switch (txType) {
-      case this.DB:
+      case me.DB:
         if (ctx._dbConn == null)
           ctx._dbConn = {};
 
@@ -102,7 +94,7 @@ db.prototype = {
        }
        var db = ctx._dbConn[dbName] = factory.openSession();
        return db;
-      case this.DB_NEW:
+      case me.DB_NEW:
         if (ctx._dbConnNew == null)
           ctx._dbConnNew = [];
 
