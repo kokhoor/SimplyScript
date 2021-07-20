@@ -1,5 +1,5 @@
 {
     "allow": null,
     "deny": null,
-    "path": "scripts/modules"
+    "path": "modules"
 }

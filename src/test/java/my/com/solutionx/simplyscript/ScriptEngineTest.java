@@ -1,3 +1,7 @@
+/*
+ * (line 1)
+ * (line 2).
+ */
 package my.com.solutionx.simplyscript;
 
 /*
@@ -16,6 +20,9 @@ package my.com.solutionx.simplyscript;
  * limitations under the License.
  */
 
+import java.io.File;
+import org.ini4j.Profile.Section;
+import org.ini4j.Wini;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -26,7 +33,14 @@ import org.junit.Test;
 public class ScriptEngineTest {
     @Test
     public void testScriptEngine() throws Exception {
+        String ini_filename = System.getProperty("config", "config.ini");
+        if (ini_filename == null || ini_filename.length() == 0) {
+            ini_filename = "config.ini";
+        }
+        Wini ini = new Wini(new File(ini_filename));
+        Section iniMain = ini.get("main");
         ScriptEngine engine = new ScriptEngine();
+        engine.init(iniMain);
         Assert.assertNotNull(engine);
         engine.action("Alert.test");
         engine.action("Alert.out", "abcdefg");

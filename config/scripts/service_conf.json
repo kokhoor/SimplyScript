@@ -1,6 +1,6 @@
 {
     "allow": null,
     "deny": null,
-    "path": "scripts/services",
+    "path": "services",
     "preload": ["db"]
 }

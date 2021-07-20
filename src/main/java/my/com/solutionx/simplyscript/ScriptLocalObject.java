@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 kokhoor.
+ * Copyright 2021 SolutionX Software Sdn. Bhd. <info@solutionx.com.my>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,13 +28,16 @@ import org.openjdk.nashorn.internal.runtime.Undefined;
  * @author kokhoor
  */
 public class ScriptLocalObject extends SimpleScriptContext {
-    WeakReference<ScriptGlobalObject> global;
+    WeakReference<ScriptEngine> global;
     Map<String, Object> request = new HashMap<>();
 
-    public ScriptLocalObject(ScriptGlobalObject global) throws ScriptException {
+    public ScriptLocalObject(ScriptEngine global) throws ScriptException {
         super();
         this.global = new WeakReference<>(global);
-        global.initScript().eval(this);
+    }
+    
+    public void init() throws ScriptException {
+        global.get().initScript().eval(this);
     }
 
     public ScriptObjectMirror ctxConstructor() {
