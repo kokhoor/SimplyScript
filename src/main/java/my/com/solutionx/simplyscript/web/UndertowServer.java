@@ -29,6 +29,7 @@ import io.undertow.util.PathTemplateMatch;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -41,6 +42,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -55,10 +57,6 @@ import org.ini4j.Profile.Section;
 import org.ini4j.Wini;
 import stormpot.PoolException;
 
-/**
- *
- * @author SolutionX Software Sdn. Bhd. <info@solutionx.com.my>
- */
 public class UndertowServer {
     private ScriptEngine engine = null;
     Undertow server = null;
@@ -116,27 +114,40 @@ public class UndertowServer {
     class ScriptCallHandler implements HttpHandler {
         @Override
         public void handleRequest(HttpServerExchange exchange) throws Exception {
-          BufferedReader br = new BufferedReader(new InputStreamReader(exchange.getInputStream(), StandardCharsets.UTF_8));
-          String inputJSONString = br.lines().collect(Collectors.joining());
-          System.out.println(inputJSONString);
-          PathTemplateMatch pathMatch = exchange.getAttachment(PathTemplateMatch.ATTACHMENT_KEY);
-          String module = pathMatch.getParameters().get("module");
-          String method = pathMatch.getParameters().get("method");
-          Object response = engine.action(module + "." + method, null);
-          String strResponse = "";
-          ObjectMapper mapperObj = new ObjectMapper();
-            if (response != null && response instanceof Map) {
-                ((Map)response).put("success", true);
-                strResponse = mapperObj.writeValueAsString(response);
-            } else {
-                Map<String, Object> mapResponse = new HashMap<>();
-                mapResponse.put("success", true);
-                mapResponse.put("message", response);
-                strResponse = mapperObj.writeValueAsString(mapResponse);
+            BufferedReader br = new BufferedReader(new InputStreamReader(exchange.getInputStream(), StandardCharsets.UTF_8));
+            String inputJSONString = br.lines().collect(Collectors.joining());
+            if (inputJSONString == null || inputJSONString.length() == 0) {
+                Map<String, Deque<String>> queryParameters = exchange.getQueryParameters();
+                if (queryParameters != null) {
+                    Deque<String> queueInput = queryParameters.get("i");
+                    if (queueInput != null)
+                        inputJSONString = queueInput.getFirst();
+                }
             }
-                 
-          exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-          exchange.getResponseSender().send(strResponse);
+            System.out.println(inputJSONString);
+            Map<String, Object> mapArgs = null;
+            if (inputJSONString != null && inputJSONString.length() > 0) {
+                ObjectMapper mapper = new ObjectMapper();
+                mapArgs = mapper.readValue(inputJSONString, Map.class);
+            }
+
+            PathTemplateMatch pathMatch = exchange.getAttachment(PathTemplateMatch.ATTACHMENT_KEY);
+            String module = pathMatch.getParameters().get("module");
+            String method = pathMatch.getParameters().get("method");
+            Object response = null;
+            try {
+                 response = engine.actionReturnString(module + "." + method, mapArgs);
+            } catch (Exception e) {
+                String out = String.format("%s:%s:%s%n", "UndertowServer:Error calling action",
+                        e.getMessage(), e.getClass().getName());
+                ObjectMapper mapper = new ObjectMapper();
+                Map<String, Object> map = new HashMap<>();
+                map.put("success", false);
+                map.put("message", out);
+                response = mapper.writeValueAsString(out);
+            }
+            exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
+            exchange.getResponseSender().send(response.toString());
         }
     }
     

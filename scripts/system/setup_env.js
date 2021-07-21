@@ -13,7 +13,7 @@ ctxObject.prototype = {
       return this._services['cache'][key];
     }
   },
-  call(action, args) {
+  call(action, args, stringify) {
     var idx = action.lastIndexOf(".");
     if (idx === -1)
       throw new Error("Invalid action format. Expected XXX.YYY");
@@ -49,7 +49,7 @@ ctxObject.prototype = {
         }
       }
 
-      return ret;
+      return stringify === true ? JSON.stringify(ret) : ret;
     } catch (e) {
       var postCall = this.callDepth <= 0 ? this.localContext.system("postCall") : this.localContext.system("postInnerCall");
       if (postCall != null) {
@@ -60,7 +60,10 @@ ctxObject.prototype = {
           }
         }
       }
-      throw e;
+      if (stringify === true)
+        return JSON.stringify({"success": false, "message": e.message});
+      else
+        throw e;
     } finally {
       this.callDepth -= 1;
     }

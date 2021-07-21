@@ -243,6 +243,20 @@ public class ScriptEngine {
         }
     }
 
+    public String actionReturnString(String action, Object args) throws ScriptException, PoolException, InterruptedException {
+        Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
+        PoolableScriptContext scriptContext = poolContext.claim(timeout);
+        try {
+            ScriptObjectMirror ctxConstructor = (ScriptObjectMirror)scriptContext.getScriptContext().ctxConstructor();
+            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.newObject(scriptContext.getScriptContext());
+            return (String)ctx.callMember("call", action, args, true);
+        } finally {
+            if (scriptContext != null) {
+              scriptContext.release();
+            }
+        }
+    }
+
     public Pool<PoolableScriptContext> getScriptContextPool() {
         return poolContext;
     }
