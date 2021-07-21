@@ -23,5 +23,8 @@
     var db2_same = ctx.db('test', ctx.db.DB_NEW);
     print("Have db2_same (shd be different): " + db2_same);
     return "CallTest.test completed!";
+  },
+  test2(args, ctx) {
+    return {"a": 5, "b": 6, "c": [1,2,3], "d": {"x":0, "y": 10}};
   }
 });

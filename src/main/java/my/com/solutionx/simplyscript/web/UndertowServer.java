@@ -15,18 +15,24 @@
  */
 package my.com.solutionx.simplyscript.web;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.undertow.Undertow;
 import io.undertow.Handlers;
 import io.undertow.Undertow.Builder;
 import io.undertow.UndertowOptions;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
+import io.undertow.server.handlers.BlockingHandler;
 import io.undertow.server.handlers.PathTemplateHandler;
 import io.undertow.util.Headers;
 import io.undertow.util.PathTemplateMatch;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
@@ -35,46 +41,61 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import javax.script.ScriptException;
+import my.com.solutionx.simplyscript.ScriptEngine;
 import org.ini4j.Profile.Section;
 import org.ini4j.Wini;
+import stormpot.PoolException;
 
 /**
  *
  * @author SolutionX Software Sdn. Bhd. <info@solutionx.com.my>
  */
 public class UndertowServer {
+    private ScriptEngine engine = null;
+    Undertow server = null;
     private static final char[] STORE_PASSWORD = "password".toCharArray();
 
     public UndertowServer() throws IOException, KeyStoreException,
             NoSuchAlgorithmException, CertificateException,
-            UnrecoverableKeyException, KeyManagementException{
+            UnrecoverableKeyException, KeyManagementException, ScriptException,
+            FileNotFoundException, PoolException, InterruptedException {
         this(null);
     }
 
     public UndertowServer(String iniFile) throws IOException, KeyStoreException,
             NoSuchAlgorithmException, CertificateException,
-            UnrecoverableKeyException, KeyManagementException {
+            UnrecoverableKeyException, KeyManagementException, ScriptException,
+            FileNotFoundException, PoolException, InterruptedException {
         String ini_filename = System.getProperty("config", iniFile);
         if (ini_filename == null || ini_filename.length() == 0) {
             ini_filename = "config.ini";
         }
         Wini ini = new Wini(new File(ini_filename));
+        Section iniMain = ini.get("main");
+        engine = new ScriptEngine();
+        engine.init(iniMain);
+
         Section sectionWebServer = ini.get("webserver");
         String protocol = sectionWebServer.getOrDefault("protocol", "http");
         String host = sectionWebServer.getOrDefault("host", "localhost");
         String port = sectionWebServer.getOrDefault("port", "8080");
         String certs_path = sectionWebServer.getOrDefault("certs_path", "certs/");
         
-        PathTemplateHandler handlers = Handlers.pathTemplate().add("/api/{module}/{method}", new ScriptCallHandler());
+        HttpHandler handlers = new BlockingHandler(Handlers.pathTemplate(false).add("/api/{module}/{method}", new ScriptCallHandler()));
 
         String bindAddress = System.getProperty("bind.address", host);
         Builder builder = Undertow.builder();
         if (protocol.equalsIgnoreCase("http2")) {
+            System.out.println(certs_path + "keystore.jks");
             SSLContext sslContext = createSSLContext(loadKeyStore(certs_path + "keystore.jks"),
                     loadKeyStore(certs_path + "truststore.jks"));
             builder = builder.setServerOption(UndertowOptions.ENABLE_HTTP2, true)
@@ -83,31 +104,47 @@ public class UndertowServer {
             SSLContext sslContext = createSSLContext(loadKeyStore(certs_path + "keystore.jks"),
                     loadKeyStore(certs_path + "truststore.jks"));
             builder = builder.addHttpsListener(Integer.valueOf(port), bindAddress, sslContext);
+        } else if (protocol.equalsIgnoreCase("http")) {
+            builder = builder.addHttpListener(Integer.valueOf(port), bindAddress);
         }
         builder = builder.setHandler(handlers);
 
-        Undertow server = builder.build();
+        server = builder.build();
         server.start();
     }
 
     class ScriptCallHandler implements HttpHandler {
         @Override
         public void handleRequest(HttpServerExchange exchange) throws Exception {
-          exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-
+          BufferedReader br = new BufferedReader(new InputStreamReader(exchange.getInputStream(), StandardCharsets.UTF_8));
+          String inputJSONString = br.lines().collect(Collectors.joining());
+          System.out.println(inputJSONString);
           PathTemplateMatch pathMatch = exchange.getAttachment(PathTemplateMatch.ATTACHMENT_KEY);
           String module = pathMatch.getParameters().get("module");
           String method = pathMatch.getParameters().get("method");
+          Object response = engine.action(module + "." + method, null);
+          String strResponse = "";
+          ObjectMapper mapperObj = new ObjectMapper();
+            if (response != null && response instanceof Map) {
+                ((Map)response).put("success", true);
+                strResponse = mapperObj.writeValueAsString(response);
+            } else {
+                Map<String, Object> mapResponse = new HashMap<>();
+                mapResponse.put("success", true);
+                mapResponse.put("message", response);
+                strResponse = mapperObj.writeValueAsString(mapResponse);
+            }
+                 
+          exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
+          exchange.getResponseSender().send(strResponse);
         }
     }
     
     private static KeyStore loadKeyStore(String name) throws IOException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
-        String storeLoc = System.getProperty(name);
-        final InputStream stream;
-        if(storeLoc == null) {
-            stream = Undertow.class.getResourceAsStream(name);
-        } else {
-            stream = Files.newInputStream(Paths.get(storeLoc));
+        final InputStream stream = Files.newInputStream(Paths.get(name));
+
+        if (stream == null) {
+            throw new RuntimeException("Could not load keystore: " + name);
         }
 
         try(InputStream is = stream) {
