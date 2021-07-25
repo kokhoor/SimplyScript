@@ -21,6 +21,8 @@ package my.com.solutionx.simplyscript;
  */
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import org.ini4j.Profile.Section;
 import org.ini4j.Wini;
 import org.junit.Assert;
@@ -42,8 +44,14 @@ public class ScriptEngineTest {
         ScriptEngine engine = new ScriptEngine();
         engine.init(iniMain);
         Assert.assertNotNull(engine);
-        engine.action("Alert.test");
-        engine.action("Alert.out", "abcdefg");
-        engine.action("CallTest.test", "abcdefg");
+        Map<String, Object> args = new HashMap<>();
+        Object ret = null;
+
+        ret = engine.action("CallTest.getEmployee", args);
+        System.out.println(ret);
+        ret = engine.action("CallTest.getEmployees", args);
+        System.out.println("getEmployees: " + ret);
+        ret = engine.action("CallTest.saveEmployee", args);
+        System.out.println("saveEmployee: " + ret);
     }
 }

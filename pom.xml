@@ -54,10 +54,41 @@
             <artifactId>ini4j</artifactId>
             <version>0.5.4</version>
         </dependency>
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc_auth</artifactId>
+            <version>9.2.1.x64</version>
+            <type>dll</type>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>9.2.1.jre11</version>
+        </dependency>
     </dependencies>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
+    <build>
+        <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-dependency-plugin</artifactId>
+              <executions>
+                <execution>
+                  <id>copy-dependencies</id>
+                  <phase>prepare-package</phase>
+                  <goals>
+                    <goal>copy-dependencies</goal>
+                  </goals>
+                  <configuration>
+                    <outputDirectory>${project.build.directory}/libs</outputDirectory>
+                  </configuration>
+                </execution>
+              </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

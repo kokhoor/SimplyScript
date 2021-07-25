@@ -5,7 +5,7 @@ function db() {
 }
 
 db.prototype = {
-  init() {
+  _init() {
     const FileReader = Java.type('java.io.FileReader');
     this.configReader = new FileReader("config/mybatis/environment.xml");
     this.properties = new (Java.type('java.util.Properties'))();
@@ -13,20 +13,18 @@ db.prototype = {
     this.dbFactories = {};
     this.factoryBuilder = Java.type('org.apache.ibatis.session.SqlSessionFactoryBuilder');
   },
-  setup() {
+  _setup() {
+/*
     let db = curry_pre([this], this.db);
     db.DB = this.DB;
     db.DB_NEW = this.DB_NEW;
+ */
     return {
-      contextPrototype: db,
-      callbacks: {
-        postInnerCall: this.postInnerCall,
-        postCall: this.postCall          
-      }
+      contextPrototype: this,
+      postInnerCall: this.postInnerCall,
+      postCall: this.postCall          
     };
   },
-  DB: 0,
-  DB_NEW: 1,
   postInnerCall(ctx, e) {
     if (ctx._dbConnNew == null)
       return;
@@ -72,47 +70,60 @@ db.prototype = {
       }
     }
   },
-  db(me, dbName, txType, ctx) {
-// console.log("in db: " + this.call + ":" + me.call + ":" + dbName + ":" + txType + ":" + me.DB + ":" + me.DB_NEW);
+  get(dbName, ctx) {
+// console.log("in db: " + this.call + ":" + this.call + ":" + dbName + ":" + txType + ":" + this.DB + ":" + this.DB_NEW);
 // print(me + ":" + dbName + ":" + txType + ":" + ctx);
-// print(txType + ":" + this + ":" + this.DB + ":" + this.DB_NEW + ":" + me.DB + ":" + me.DB_NEW);
+// print(txType + ":" + this + ":" + this.DB + ":" + this.DB_NEW + ":" + this.DB + ":" + this.DB_NEW);
     if (ctx == null)
-      ctx = this;
-    if (txType == null)
-      txType = me.DB;
-    switch (txType) {
-      case me.DB:
-        if (ctx._dbConn == null)
-          ctx._dbConn = {};
+      throw new Error("Context must be provided");
 
-       if (ctx._dbConn[dbName])
-         return ctx._dbConn[dbName];
+    if (ctx._dbConn == null)
+      ctx._dbConn = {};
 
-       var factory = me.dbFactories[dbName];
-       if (factory == null) {
-         factory = me.dbFactories[dbName] = (new me.factoryBuilder()).build(me.configReader, dbName, me.properties);
-       }
-       var db = ctx._dbConn[dbName] = factory.openSession();
-       return db;
-      case me.DB_NEW:
-        if (ctx._dbConnNew == null)
-          ctx._dbConnNew = [];
+    if (ctx._dbConn[dbName])
+      return ctx._dbConn[dbName];
 
-        var factory = me.dbFactories[dbName];
-        if (factory == null) {
-          factory = me.dbFactories[dbName] = (new me.factoryBuilder()).build(me.configReader, dbName, me.properties);
-        }
-
-        var db = factory.openSession();
-        ctx._dbConnNew.push(db);
-        return db;
-      default:
-        throw new Error("Unknown Database Transaction Type provided.");
+    var factory = this.dbFactories[dbName];
+    if (factory == null) {
+      factory = this.dbFactories[dbName] = (new this.factoryBuilder()).build(this.configReader, dbName, this.properties);
     }
+    var db = ctx._dbConn[dbName] = factory.openSession();
+    return db;
+  },
+  newDb(dbName, ctx) {
+// console.log("in db: " + this.call + ":" + this.call + ":" + dbName + ":" + txType + ":" + this.DB + ":" + this.DB_NEW);
+// print(me + ":" + dbName + ":" + txType + ":" + ctx);
+// print(txType + ":" + this + ":" + this.DB + ":" + this.DB_NEW + ":" + this.DB + ":" + this.DB_NEW);
+    if (ctx == null)
+      throw new Error("Context must be provided");
+
+    if (ctx._dbConnNew == null)
+      ctx._dbConnNew = [];
+
+    var factory = this.dbFactories[dbName];
+    if (factory == null) {
+      factory = this.dbFactories[dbName] = (new this.factoryBuilder()).build(this.configReader, dbName, this.properties);
+    }
+
+    var db = factory.openSession();
+    ctx._dbConnNew.push(db);
+    return db;
+  },
+  selectOne(dbName, scriptName, parameters, ctx) {
+    var db = this.get(dbName, ctx);
+    return db.selectOne(scriptName, parameters);
+  },
+  selectList(dbName, scriptName, parameters, ctx) {
+    var db = this.get(dbName, ctx);
+    return db.selectList(scriptName, parameters);
+  },
+  update(dbName, scriptName, parameters, ctx) {
+    var db = this.get(dbName, ctx);
+    return db.update(scriptName, parameters);
   }
 };
 var service = new db();
-service.init();
+service._init();
 return service;
 
 }());

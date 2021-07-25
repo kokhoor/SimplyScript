@@ -13,7 +13,7 @@ ctxObject.prototype = {
       return this._services['cache'][key];
     }
   },
-  call(action, args, stringify) {
+  call(action, args) {
     var idx = action.lastIndexOf(".");
     if (idx === -1)
       throw new Error("Invalid action format. Expected XXX.YYY");
@@ -49,7 +49,7 @@ ctxObject.prototype = {
         }
       }
 
-      return stringify === true ? JSON.stringify(ret) : ret;
+      return ret;
     } catch (e) {
       var postCall = this.callDepth <= 0 ? this.localContext.system("postCall") : this.localContext.system("postInnerCall");
       if (postCall != null) {
@@ -60,10 +60,7 @@ ctxObject.prototype = {
           }
         }
       }
-      if (stringify === true)
-        return JSON.stringify({"success": false, "message": e.message});
-      else
-        throw e;
+      throw e;
     } finally {
       this.callDepth -= 1;
     }
@@ -98,8 +95,8 @@ ctxObject.serviceSetup = function(serviceName, system) {
   if (service == null)
     return null;
 
-  if ("setup" in service) {
-    setupData = service.setup();
+  if ("_setup" in service) {
+    setupData = service._setup();
   }
   if (setupData == null)
     return service;
@@ -108,16 +105,14 @@ ctxObject.serviceSetup = function(serviceName, system) {
     ctxObject.prototype[serviceName] = setupData.contextPrototype;
   }
 
-  if (setupData.callbacks != null) {
-    var keys = ["preCall", "postCall", "preInnerCall", "postInnerCall"];
-    for (var i=0; i<keys.length; i++) {
-      var call = setupData.callbacks[keys[i]];
-      if (call != null) {
-        var call_array = system[keys[i]];
-        if (call_array == null)
-          call_array = system[keys[i]] = [];
-        call_array.push(call);
-      }
+  var keys = ["preCall", "postCall", "preInnerCall", "postInnerCall"];
+  for (var i=0; i<keys.length; i++) {
+    var call = setupData[keys[i]];
+    if (call != null) {
+      var call_array = system[keys[i]];
+      if (call_array == null)
+        call_array = system[keys[i]] = [];
+      call_array.push(call);
     }
   }
   return service;

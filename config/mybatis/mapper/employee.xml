@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="null">
+  <select id="getEmployee" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+    select * from employee
+      WHERE MobileNo=#{mobileno,javaType=String,jdbcType=VARCHAR}
+  </select>
+
+  <select id="getEmployees" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+    select * from employee
+      WHERE MobileNo in 
+    <foreach item="mobileno" index="index" collection="mobileno" open="(" separator="," close=")">
+      #{mobileno, javaType=String, jdbcType=VARCHAR}
+    </foreach>
+  </select>
+
+  <update id="saveEmployee" parameterType="hashmap">
+    INSERT INTO Employee (name, contactno, emailaddress, mobileno)
+    VALUES (
+      #{name, javaType=String, jdbcType=VARCHAR},
+      #{contactno, javaType=String, jdbcType=VARCHAR},
+      #{emailaddress, javaType=String, jdbcType=VARCHAR},
+      #{mobileno, javaType=String, jdbcType=VARCHAR}
+    )
+    ON CONFLICT (mobileno) DO UPDATE SET name=EXCLUDED.name,
+      contactno=EXCLUDED.contactno,
+      emailaddress=EXCLUDED.emailaddress;
+  </update>
+</mapper>

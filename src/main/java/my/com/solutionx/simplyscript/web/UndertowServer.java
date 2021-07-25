@@ -16,6 +16,7 @@
 package my.com.solutionx.simplyscript.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.undertow.Undertow;
 import io.undertow.Handlers;
 import io.undertow.Undertow.Builder;
@@ -23,13 +24,11 @@ import io.undertow.UndertowOptions;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.BlockingHandler;
-import io.undertow.server.handlers.PathTemplateHandler;
 import io.undertow.util.Headers;
 import io.undertow.util.PathTemplateMatch;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -44,6 +43,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.net.ssl.KeyManager;
@@ -53,11 +53,16 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.script.ScriptException;
 import my.com.solutionx.simplyscript.ScriptEngine;
+import my.com.solutionx.simplyscript.ScriptObjectMirrorSerializer;
 import org.ini4j.Profile.Section;
 import org.ini4j.Wini;
+import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
 import stormpot.PoolException;
 
 public class UndertowServer {
+    protected static UndertowServer undertow_server = null;
+    protected volatile static boolean bStop = false;
+
     private ScriptEngine engine = null;
     Undertow server = null;
     private static final char[] STORE_PASSWORD = "password".toCharArray();
@@ -73,7 +78,9 @@ public class UndertowServer {
             NoSuchAlgorithmException, CertificateException,
             UnrecoverableKeyException, KeyManagementException, ScriptException,
             FileNotFoundException, PoolException, InterruptedException {
-        String ini_filename = System.getProperty("config", iniFile);
+        String ini_filename = iniFile;
+        if (ini_filename == null || ini_filename.length() == 0)
+            ini_filename = System.getProperty("config", iniFile);
         if (ini_filename == null || ini_filename.length() == 0) {
             ini_filename = "config.ini";
         }
@@ -82,29 +89,40 @@ public class UndertowServer {
         engine = new ScriptEngine();
         engine.init(iniMain);
 
-        Section sectionWebServer = ini.get("webserver");
-        String protocol = sectionWebServer.getOrDefault("protocol", "http");
-        String host = sectionWebServer.getOrDefault("host", "localhost");
-        String port = sectionWebServer.getOrDefault("port", "8080");
-        String certs_path = sectionWebServer.getOrDefault("certs_path", "certs/");
-        
         HttpHandler handlers = new BlockingHandler(Handlers.pathTemplate(false).add("/api/{module}/{method}", new ScriptCallHandler()));
 
-        String bindAddress = System.getProperty("bind.address", host);
         Builder builder = Undertow.builder();
-        if (protocol.equalsIgnoreCase("http2")) {
-            System.out.println(certs_path + "keystore.jks");
-            SSLContext sslContext = createSSLContext(loadKeyStore(certs_path + "keystore.jks"),
-                    loadKeyStore(certs_path + "truststore.jks"));
-            builder = builder.setServerOption(UndertowOptions.ENABLE_HTTP2, true)
-                    .addHttpsListener(Integer.valueOf(port), bindAddress, sslContext);
-        } else if (protocol.equalsIgnoreCase("https")) {
-            SSLContext sslContext = createSSLContext(loadKeyStore(certs_path + "keystore.jks"),
-                    loadKeyStore(certs_path + "truststore.jks"));
-            builder = builder.addHttpsListener(Integer.valueOf(port), bindAddress, sslContext);
-        } else if (protocol.equalsIgnoreCase("http")) {
-            builder = builder.addHttpListener(Integer.valueOf(port), bindAddress);
+
+        Section sectionHttp = ini.get("http");
+        if (sectionHttp != null) {
+            String isActive = sectionHttp.getOrDefault("active", "true");
+            if (isActive.equalsIgnoreCase("true")) {
+                String host = sectionHttp.getOrDefault("host", "localhost");
+                String port = sectionHttp.getOrDefault("port", "8080");
+                String bindAddress = System.getProperty("bind.address", host);
+                builder = builder.addHttpListener(Integer.valueOf(port), bindAddress);
+            }
         }
+
+        Section sectionHttps = ini.get("https");
+        if (sectionHttps != null) {
+            String isActive = sectionHttps.getOrDefault("active", "true");
+            if (isActive.equalsIgnoreCase("true")) {
+                String host = sectionHttps.getOrDefault("host", "localhost");
+                String port = sectionHttps.getOrDefault("port", "8443");
+                String keyStore = sectionHttps.getOrDefault("keystore", "keystore.jks");
+                String trustStore = sectionHttps.getOrDefault("truststore", "truststore.jks");
+                String bindAddress = System.getProperty("bind.address", host);
+                SSLContext sslContext = createSSLContext(loadKeyStore(keyStore),
+                        loadKeyStore(trustStore));
+                String enable_http2 = sectionHttps.getOrDefault("enable_http2", "true");
+                if (enable_http2 != null && enable_http2.equalsIgnoreCase("true")) {
+                    builder = builder.setServerOption(UndertowOptions.ENABLE_HTTP2, true);
+                }
+                builder = builder.addHttpsListener(Integer.valueOf(port), bindAddress, sslContext);
+            }
+        }
+
         builder = builder.setHandler(handlers);
 
         server = builder.build();
@@ -136,7 +154,15 @@ public class UndertowServer {
             String method = pathMatch.getParameters().get("method");
             Object response = null;
             try {
-                 response = engine.actionReturnString(module + "." + method, mapArgs);
+                 response = engine.action(module + "." + method, mapArgs);
+                ObjectMapper mapper = new ObjectMapper();
+                var simple_module = new SimpleModule();
+                simple_module.addSerializer(new ScriptObjectMirrorSerializer(ScriptObjectMirror.class));
+                mapper.registerModule(simple_module);
+                Map<String, Object> map = new HashMap<>();
+                map.put("success", true);
+                map.put("data", response);
+                response = mapper.writeValueAsString(map);
             } catch (Exception e) {
                 String out = String.format("%s:%s:%s%n", "UndertowServer:Error calling action",
                         e.getMessage(), e.getClass().getName());
@@ -158,7 +184,7 @@ public class UndertowServer {
             throw new RuntimeException("Could not load keystore: " + name);
         }
 
-        try(InputStream is = stream) {
+        try (InputStream is = stream) {
             KeyStore loadedKeystore = KeyStore.getInstance("JKS");
             loadedKeystore.load(is, STORE_PASSWORD);
             return loadedKeystore;
@@ -181,5 +207,36 @@ public class UndertowServer {
         sslContext.init(keyManagers, trustManagers, null);
 
         return sslContext;
+    }
+
+    public static void main( String argv[] ) throws Exception {
+        if ( argv.length == 0 || argv[0].equals("start") ) {
+            System.out.println( "Start Service..." );
+            String strConf = "config.ini";
+            if ( argv.length > 1 )
+                strConf = argv[1];
+            undertow_server = new UndertowServer(strConf);
+            while ( !getStopped() ) {
+                try {
+                    Thread.sleep( 1000 );
+                } catch (Exception e) {
+                }
+            }
+        } else if (argv[0].equals("stop")) {
+            System.out.println( "Stop Service" );
+            if ( undertow_server != null )
+                undertow_server.server.stop();
+            setStop();
+        }
+    }
+
+    public synchronized static void setStop()
+    {
+        bStop = true;
+    }
+
+    public synchronized static boolean getStopped()
+    {
+        return bStop;
     }
 }

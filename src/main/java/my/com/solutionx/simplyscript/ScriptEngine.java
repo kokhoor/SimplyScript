@@ -15,7 +15,9 @@
  */
 package my.com.solutionx.simplyscript;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.io.FileNotFoundException;
@@ -26,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.script.CompiledScript;
 import javax.script.ScriptContext;
 import javax.script.ScriptException;
@@ -243,13 +247,20 @@ public class ScriptEngine {
         }
     }
 
-    public String actionReturnString(String action, Object args) throws ScriptException, PoolException, InterruptedException {
+    public String actionReturnString(String action, Object args) throws ScriptException, PoolException, InterruptedException, JsonProcessingException {
         Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
         PoolableScriptContext scriptContext = poolContext.claim(timeout);
         try {
             ScriptObjectMirror ctxConstructor = (ScriptObjectMirror)scriptContext.getScriptContext().ctxConstructor();
             ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.newObject(scriptContext.getScriptContext());
-            return (String)ctx.callMember("call", action, args, true);
+            Object ret = ctx.callMember("call", action, args);
+            
+            ObjectMapper mapper = new ObjectMapper();
+            SimpleModule module = new SimpleModule();
+            module.addSerializer(new ScriptObjectMirrorSerializer(ScriptObjectMirror.class));
+            // module.addSerializer(ScriptObjectMirror.class, new ScriptObjectMirrorSerializer());
+            mapper.registerModule(module);
+            return mapper.writeValueAsString(ret);
         } finally {
             if (scriptContext != null) {
               scriptContext.release();

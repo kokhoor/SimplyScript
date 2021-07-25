@@ -8,8 +8,8 @@
     <setting name="defaultFetchSize" value="100"/>
     <setting name="defaultResultSetType" value="FORWARD_ONLY"/>
   </settings>
-  <environments default="test">
-    <environment id="test">
+  <environments default="default">
+    <environment id="default">
       <transactionManager type="JDBC">
         <property name="closeConnection" value="true"/>
         <property name="autoCommitOnClose" value="false"/>
@@ -20,10 +20,13 @@
         <property name="username" value="${username}"/>
         <property name="password" value="${password}"/>
         <property name="defaultAutoCommit" value="false"/>
+        <property name="poolMaximumActiveConnections" value="100"/>
+        <property name="poolMaximumIdleConnections" value="20"/>
+        
       </dataSource>
     </environment>
   </environments>
   <mappers>
-    <mapper url="file:config/mybatis/mapper/users.xml"></mapper>
+    <mapper url="file:config/mybatis/mapper/employee.xml"></mapper>
   </mappers>
 </configuration>
