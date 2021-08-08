@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 SolutionX Software Sdn. Bhd. <info@solutionx.com.my>.
+ * Copyright 2021 SolutionX Software Sdn. Bhd. &lt;info@solutionx.com.my&gt;.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package my.com.solutionx.simplyscript;
 
 /**
  *
- * @author SolutionX Software Sdn. Bhd. <info@solutionx.com.my>
+ * @author SolutionX Software Sdn. Bhd. &lt;info@solutionx.com.my&gt;
  */
 public class ScriptServiceException extends Exception {
     public String code = null;

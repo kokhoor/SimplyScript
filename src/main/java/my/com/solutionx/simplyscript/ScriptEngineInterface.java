@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 SolutionX Software Sdn. Bhd. <info@solutionx.com.my>.
+ * Copyright 2021 SolutionX Software Sdn. Bhd. &lt;info@solutionx.com.my&gt;.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import stormpot.PoolException;
 
 /**
  *
- * @author SolutionX Software Sdn. Bhd. <info@solutionx.com.my>
+ * @author SolutionX Software Sdn. Bhd. &lt;info@solutionx.com.my&gt;
  */
 public interface ScriptEngineInterface {
     public void init(ScriptService aThis, Map<String, Object> mapScriptConfig) throws ScriptException;
