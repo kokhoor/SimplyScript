@@ -5,14 +5,14 @@
 <mapper namespace="null">
   <select id="getEmployee" parameterType="hashmap" resultType="hashmap" fetchSize="10">
     select * from employee
-      WHERE MobileNo=#{mobileno,javaType=String,jdbcType=VARCHAR}
+      WHERE MobileNo=#{mobileno}
   </select>
 
   <select id="getEmployees" parameterType="hashmap" resultType="hashmap" fetchSize="10">
     select * from employee
       WHERE MobileNo in 
     <foreach item="mobileno" index="index" collection="mobileno" open="(" separator="," close=")">
-      #{mobileno, javaType=String, jdbcType=VARCHAR}
+      #{mobileno}
     </foreach>
   </select>
 

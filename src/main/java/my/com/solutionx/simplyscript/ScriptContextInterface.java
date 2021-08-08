@@ -13,19 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package my.com.solutionx.simplyscript.web;
+package my.com.solutionx.simplyscript;
 
-import org.junit.Test;
+import javax.script.ScriptException;
 
 /**
  *
  * @author SolutionX Software Sdn. Bhd. <info@solutionx.com.my>
  */
-public class UndertowTest {
-    @Test
-    public void testInit() throws Exception {
-        UndertowServer undertow = new UndertowServer();
-        Thread.sleep(60000);
-        undertow.server.stop();
-    }
+public interface ScriptContextInterface {
+
+    public void init() throws ScriptException;
+
+    public void recycle();
+
+    public void cleanup();
+
+    public Object service(String service) throws ScriptException;
+
+    public Object module(String service);
+    
 }

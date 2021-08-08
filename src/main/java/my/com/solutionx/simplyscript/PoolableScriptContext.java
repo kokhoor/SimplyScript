@@ -20,13 +20,13 @@ import stormpot.BasePoolable;
 import stormpot.Slot;
 
 public class PoolableScriptContext extends BasePoolable {
-    ScriptLocalObject ctx = null;
-    ScriptEngine global = null;
+    ScriptContextInterface ctx = null;
+    ScriptEngineInterface global = null;
 
-    PoolableScriptContext(ScriptEngine global, Slot slot) throws ScriptException {
+    PoolableScriptContext(ScriptEngineInterface global, Slot slot) throws ScriptException {
         super(slot);
         this.global = global;
-        ctx = new ScriptLocalObject(global);
+        ctx = global.getScriptContext();
         ctx.init();
     }
 
@@ -36,12 +36,12 @@ public class PoolableScriptContext extends BasePoolable {
         super.release();
     }
     
-    public ScriptLocalObject getScriptContext() {
+    public ScriptContextInterface getScriptContext() {
         return ctx;
     }
     
     public Object eval(String script) throws ScriptException {
-        return global.engine().eval(script, ctx);
+        return global.eval(script, ctx);
     }
 
     void deallocate() {

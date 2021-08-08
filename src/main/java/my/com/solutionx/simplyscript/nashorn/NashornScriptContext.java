@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package my.com.solutionx.simplyscript;
+package my.com.solutionx.simplyscript.nashorn;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
+import my.com.solutionx.simplyscript.ScriptContextInterface;
 import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.openjdk.nashorn.internal.runtime.Undefined;
 
@@ -27,11 +28,11 @@ import org.openjdk.nashorn.internal.runtime.Undefined;
  *
  * @author kokhoor
  */
-public class ScriptLocalObject extends SimpleScriptContext {
+public class NashornScriptContext extends SimpleScriptContext implements ScriptContextInterface {
     WeakReference<ScriptEngine> global;
     Map<String, Object> request = new HashMap<>();
 
-    public ScriptLocalObject(ScriptEngine global) throws ScriptException {
+    public NashornScriptContext(ScriptEngine global) {
         super();
         this.global = new WeakReference<>(global);
     }
@@ -69,9 +70,9 @@ public class ScriptLocalObject extends SimpleScriptContext {
     }
 
     public Object module(String key) {
-        return global.get().modules.get(key, (String k) -> {
+        return global.get().modules().get(key, (String k) -> {
             ScriptObjectMirror ctxObject = global.get().ctxConstructor();
-            return ctxObject.callMember("moduleSetup", key, global.get().system);
+            return ctxObject.callMember("moduleSetup", key, global.get().system());
         });
     }
 
@@ -79,7 +80,7 @@ public class ScriptLocalObject extends SimpleScriptContext {
         ScriptObjectMirror obj = (ScriptObjectMirror)global.get().service(key);
         if (obj == null) {
             ScriptObjectMirror ctxObject = global.get().ctxConstructor();
-            Object ret = ctxObject.callMember("serviceSetup", key, global.get().system);
+            Object ret = ctxObject.callMember("serviceSetup", key, global.get().system());
             if (ret == null || ret.getClass() == Undefined.class)
                 throw new RuntimeException("Service cannot be setup: " + key);
             obj = (ScriptObjectMirror) ret;

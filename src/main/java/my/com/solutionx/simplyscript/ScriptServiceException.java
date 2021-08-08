@@ -13,19 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package my.com.solutionx.simplyscript.web;
-
-import org.junit.Test;
+package my.com.solutionx.simplyscript;
 
 /**
  *
  * @author SolutionX Software Sdn. Bhd. <info@solutionx.com.my>
  */
-public class UndertowTest {
-    @Test
-    public void testInit() throws Exception {
-        UndertowServer undertow = new UndertowServer();
-        Thread.sleep(60000);
-        undertow.server.stop();
+public class ScriptServiceException extends Exception {
+    public String code = null;
+    
+    public ScriptServiceException(String errorMessage) {
+        super(errorMessage);
+    }
+
+    public ScriptServiceException(String errorMessage, String errorCode) {
+        super(errorMessage);
+        code = errorCode;
+    }
+
+    public String getCode() {
+        return code;
     }
 }

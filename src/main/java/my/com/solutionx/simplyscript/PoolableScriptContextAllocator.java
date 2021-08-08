@@ -25,9 +25,9 @@ import stormpot.Slot;
  * @author kokhoor
  */
 public class PoolableScriptContextAllocator implements Allocator<PoolableScriptContext> {
-    ScriptEngine global;
+    ScriptEngineInterface global;
 
-    public PoolableScriptContextAllocator(ScriptEngine global) throws IOException, ScriptException {
+    public PoolableScriptContextAllocator(ScriptEngineInterface global) throws IOException, ScriptException {
         this.global = global;
     }
     

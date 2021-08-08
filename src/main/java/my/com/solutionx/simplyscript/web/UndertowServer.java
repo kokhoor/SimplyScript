@@ -32,6 +32,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -43,7 +44,6 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Deque;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.net.ssl.KeyManager;
@@ -52,8 +52,9 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.script.ScriptException;
-import my.com.solutionx.simplyscript.ScriptEngine;
-import my.com.solutionx.simplyscript.ScriptObjectMirrorSerializer;
+import my.com.solutionx.simplyscript.ScriptService;
+import my.com.solutionx.simplyscript.ScriptServiceException;
+import my.com.solutionx.simplyscript.nashorn.ScriptObjectMirrorSerializer;
 import org.ini4j.Profile.Section;
 import org.ini4j.Wini;
 import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -63,21 +64,21 @@ public class UndertowServer {
     protected static UndertowServer undertow_server = null;
     protected volatile static boolean bStop = false;
 
-    private ScriptEngine engine = null;
+    private ScriptService engine = null;
     Undertow server = null;
     private static final char[] STORE_PASSWORD = "password".toCharArray();
 
     public UndertowServer() throws IOException, KeyStoreException,
             NoSuchAlgorithmException, CertificateException,
             UnrecoverableKeyException, KeyManagementException, ScriptException,
-            FileNotFoundException, PoolException, InterruptedException {
+            FileNotFoundException, PoolException, InterruptedException, InvocationTargetException, ScriptServiceException {
         this(null);
     }
 
     public UndertowServer(String iniFile) throws IOException, KeyStoreException,
             NoSuchAlgorithmException, CertificateException,
             UnrecoverableKeyException, KeyManagementException, ScriptException,
-            FileNotFoundException, PoolException, InterruptedException {
+            FileNotFoundException, PoolException, InterruptedException, InvocationTargetException, ScriptServiceException, InvocationTargetException {
         String ini_filename = iniFile;
         if (ini_filename == null || ini_filename.length() == 0)
             ini_filename = System.getProperty("config", iniFile);
@@ -86,7 +87,7 @@ public class UndertowServer {
         }
         Wini ini = new Wini(new File(ini_filename));
         Section iniMain = ini.get("main");
-        engine = new ScriptEngine();
+        engine = new ScriptService();
         engine.init(iniMain);
 
         HttpHandler handlers = new BlockingHandler(Handlers.pathTemplate(false).add("/api/{module}/{method}", new ScriptCallHandler()));
@@ -142,7 +143,7 @@ public class UndertowServer {
                         inputJSONString = queueInput.getFirst();
                 }
             }
-            System.out.println(inputJSONString);
+            // System.out.println(inputJSONString);
             Map<String, Object> mapArgs = null;
             if (inputJSONString != null && inputJSONString.length() > 0) {
                 ObjectMapper mapper = new ObjectMapper();
@@ -154,7 +155,7 @@ public class UndertowServer {
             String method = pathMatch.getParameters().get("method");
             Object response = null;
             try {
-                 response = engine.action(module + "." + method, mapArgs);
+                response = engine.action(module + "." + method, mapArgs);
                 ObjectMapper mapper = new ObjectMapper();
                 var simple_module = new SimpleModule();
                 simple_module.addSerializer(new ScriptObjectMirrorSerializer(ScriptObjectMirror.class));
