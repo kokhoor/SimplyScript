@@ -63,6 +63,7 @@ public class ScriptService {
         String pool_size = config.getOrDefault("pool_size", "5");
 
         String ScriptEngineClass = config.getOrDefault("engine", "my.com.solutionx.simplyscript.nashorn.ScriptEngine");
+        System.out.println("Using ScriptEngineClass: " + ScriptEngineClass);
         Class<ScriptEngineInterface> scriptEngineClass;
         try {
             scriptEngineClass = (Class<ScriptEngineInterface>) Class.forName(ScriptEngineClass);

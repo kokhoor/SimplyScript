@@ -16,8 +16,8 @@
 package my.com.solutionx.simplyscript;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.io.IOException;
 import java.util.Map;
-import javax.script.ScriptContext;
 import javax.script.ScriptException;
 import stormpot.PoolException;
 
@@ -26,7 +26,7 @@ import stormpot.PoolException;
  * @author SolutionX Software Sdn. Bhd. &lt;info@solutionx.com.my&gt;
  */
 public interface ScriptEngineInterface {
-    public void init(ScriptService aThis, Map<String, Object> mapScriptConfig) throws ScriptException;
+    public void init(ScriptService aThis, Map<String, Object> mapScriptConfig) throws ScriptException, IOException;
     public ScriptContextInterface getScriptContext();
     public Object eval(String script, ScriptContextInterface ctx) throws ScriptException;
 

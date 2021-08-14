@@ -19,8 +19,11 @@
     return ctx.db.selectOne("default", "getEmployee", {"mobileno": "12345"}, ctx);
   },
   getEmployees(args, ctx) {
-    return ctx.db.selectList("default", "getEmployees", {
-      "mobileno": ["mobileno", "12345"]}, ctx);
+    var params = {
+      "mobileno": ["mobileno", "12345"]
+    };
+    console.log("Params: " + params);
+    return ctx.db.selectList("default", "getEmployees", params, ctx);
   },
   test(args, ctx) {    
     ctx.call("Alert.out", {"str": "String to display"});

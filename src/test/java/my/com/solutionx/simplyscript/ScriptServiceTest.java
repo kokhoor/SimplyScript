@@ -50,7 +50,7 @@ public class ScriptServiceTest {
         Object ret = null;
 
         ret = engine.action("CallTest.getEmployee", args);
-        System.out.println(ret);
+        System.out.println("getEmployee: " + ret);
         ret = engine.action("CallTest.getEmployees", args);
         System.out.println("getEmployees: " + ret);
         ret = engine.action("CallTest.saveEmployee", args);

@@ -62,7 +62,7 @@ public class ScriptEngine implements ScriptEngineInterface {
         ScriptObjectMirror fnCtxFactory = (ScriptObjectMirror)engine.eval("load('" + scripts_path + "system/setup_env.js')", currentCtx);
         ScriptObjectMirror ctxFactoryRet = (ScriptObjectMirror)fnCtxFactory.call(fnCtxFactory);
         ctxConstructor = (ScriptObjectMirror)ctxFactoryRet;
-        ctxFactoryRet.callMember("config", mapScriptConfig);
+        ctxConstructor.callMember("config", mapScriptConfig);
     }
 
     CompiledScript initScript() {
