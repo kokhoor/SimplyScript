@@ -48,7 +48,7 @@ import stormpot.Timeout;
 public class ScriptEngine implements ScriptEngineInterface {
     WeakReference<ScriptService> scriptService = null;
     Engine engine = null;
-    Context ctx = null;
+    ScriptContext ctx = null;
     Source initScript = null;
     private Value ctxConstructor;
     HostAccess hostAccess = null;
@@ -78,16 +78,19 @@ public class ScriptEngine implements ScriptEngineInterface {
                 .allowMapAccess(true)
                 .allowPublicAccess(true);
         hostAccess = builder.build();
-
+        ctx = (ScriptContext)getScriptContext();
+        ctx.init();
+        
+/*
         ctx = Context.newBuilder("js").engine(engine)
                 .allowAllAccess(true)
                 .allowValueSharing(true)
                 .allowHostAccess(hostAccess)
                 .allowIO(true).build();
         ctx.eval(initScript);
-
+*/
         Source setupEnvScript = Source.newBuilder("js", new File(scripts_path + "system/setup_env.js")).build();
-        Value value = ctx.eval(setupEnvScript);
+        Value value = ctx.ctx.eval(setupEnvScript);
 //        ctxConstructor = (ScriptObjectMirror)ctxFactoryRet;
         ctxConstructor = value.execute();
         ctxConstructor.getMember("config").execute(mapScriptConfig);

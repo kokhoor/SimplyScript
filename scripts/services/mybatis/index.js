@@ -1,10 +1,10 @@
 /* global moment, Java */
 (function() {
   
-function db() {
+function mybatis() {
 }
 
-db.prototype = {
+mybatis.prototype = {
   _init() {
     const FileReader = Java.type('java.io.FileReader');
     this.configReader = new FileReader("config/mybatis/environment.xml");
@@ -13,17 +13,22 @@ db.prototype = {
     this.dbFactories = {};
     this.factoryBuilder = Java.type('org.apache.ibatis.session.SqlSessionFactoryBuilder');
   },
-  _setup() {
+  _setup(serviceName, system, path) {
 /*
     let db = curry_pre([this], this.db);
     db.DB = this.DB;
     db.DB_NEW = this.DB_NEW;
  */
+    this._loggername = "services." + serviceName;
+    log.info(this, "Service Name: {}, my path is: {}", serviceName, path);
     return {
       contextPrototype: this,
       postInnerCall: this.postInnerCall,
       postCall: this.postCall          
     };
+  },
+  getLoggerName() {
+    return this._loggername;
   },
   postInnerCall(ctx, e) {
     if (ctx._dbConnNew == null)
@@ -71,6 +76,7 @@ db.prototype = {
     }
   },
   get(dbName, ctx) {
+    log.info(this, "We are in the mybatis service.");
 // console.log("in db: " + this.call + ":" + this.call + ":" + dbName + ":" + txType + ":" + this.DB + ":" + this.DB_NEW);
 // print(me + ":" + dbName + ":" + txType + ":" + ctx);
 // print(txType + ":" + this + ":" + this.DB + ":" + this.DB_NEW + ":" + this.DB + ":" + this.DB_NEW);
@@ -122,7 +128,7 @@ db.prototype = {
     return db.update(scriptName, parameters);
   }
 };
-var service = new db();
+var service = new mybatis();
 service._init();
 return service;
 

@@ -2,5 +2,8 @@
     "allow": null,
     "deny": null,
     "path": "services",
+    "map": {
+      "db": "mybatis"
+    },
     "preload": ["db"]
 }

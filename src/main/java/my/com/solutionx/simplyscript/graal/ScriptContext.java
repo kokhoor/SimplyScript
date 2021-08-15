@@ -31,7 +31,7 @@ import org.graalvm.polyglot.Value;
 public class ScriptContext implements ScriptContextInterface{
     WeakReference<ScriptEngine> global;
     Map<String, Object> request = new HashMap<>();
-    private final Context ctx;
+    final Context ctx;
 
     ScriptContext(ScriptEngine global, HostAccess hostAccess) {
         this.global = new WeakReference<>(global);

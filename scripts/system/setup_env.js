@@ -3,9 +3,15 @@
 function ctxObject(localContext) {
   this.localContext = localContext;
   this.callDepth = -1;
+  this.callStack = [];
 }
 
 ctxObject.prototype = {
+  getLoggerName() {
+    if (this.callStack.length == 0)
+      return "context";
+    return "modules." + this.callStack[this.callStack.length-1];
+  },
   cache(key, value) {
     if (arguments.length > 1) { // is set
       this._services['cache'][key] = value;
@@ -26,6 +32,7 @@ ctxObject.prototype = {
       throw new Error("Module not found: " + module);
 
     this.callDepth += 1;
+    this.callStack.push(action);
     try {
       var preCall = this.callDepth <= 0 ? this.localContext.system("preCall") : this.localContext.system("preInnerCall");
       if (preCall != null) {
@@ -63,6 +70,7 @@ ctxObject.prototype = {
       throw e;
     } finally {
       this.callDepth -= 1;
+      this.callStack.pop();
     }
   },
   service(name) {
@@ -91,12 +99,13 @@ ctxObject.serviceSetup = function(serviceName, system) {
   }
 
   var setupData = null;
-  var service = load(`${this._config.service.path}/${scriptName}/index.js`);
+  var path = `${this._config.service.path}/${scriptName}/`;
+  var service = load(path + 'index.js');
   if (service == null)
     return null;
 
   if ("_setup" in service) {
-    setupData = service._setup();
+    setupData = service._setup(serviceName, system, path);
   }
   if (setupData == null)
     return service;
@@ -118,7 +127,7 @@ ctxObject.serviceSetup = function(serviceName, system) {
   return service;
 };
 
-ctxObject.moduleSetup = function (moduleName) {
+ctxObject.moduleSetup = function (moduleName, system, loader) {
   if (this._config.module.deny != null) {
     if (moduleName in this._config.module.deny) {
       return null;
@@ -137,7 +146,11 @@ ctxObject.moduleSetup = function (moduleName) {
     if (mappedScript != null)
       scriptName = mappedScript;
   }
-  var module = load(`${this._config.module.path}/${scriptName}/index.js`);
+  var path = `${this._config.module.path}/${scriptName}/`;
+  var module = load(path + 'index.js');
+  if ("_setup" in module) {
+    setupData = module._setup(moduleName, system, path);
+  }
   return module;
 };
 

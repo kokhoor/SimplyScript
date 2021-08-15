@@ -1,0 +1,65 @@
+<configuration>
+
+    <property name="LOG_FOLDER" value="logs/"/>
+
+    <appender name="modules_appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FOLDER}/modules.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+          <fileNamePattern>${LOG_FOLDER}/modules.%d{yyyy-MM-dd}.log</fileNamePattern>
+          <maxHistory>30</maxHistory>
+          <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="services_appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FOLDER}/services.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+          <fileNamePattern>${LOG_FOLDER}/services.%d{yyyy-MM-dd}.log</fileNamePattern>
+          <maxHistory>30</maxHistory>
+          <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="stdout_appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FOLDER}/stdout.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+          <fileNamePattern>${LOG_FOLDER}/stdout.%d{yyyy-MM-dd}.log</fileNamePattern>
+          <maxHistory>30</maxHistory>
+          <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>
+                %d [%thread] %-5level %logger{36} - %msg%n
+            </Pattern>
+        </layout>
+    </appender>
+
+    <logger name="modules" level="debug" additivity="false">
+        <appender-ref ref="modules_appender"/>
+    </logger>
+
+    <logger name="services" level="debug" additivity="false">
+        <appender-ref ref="services_appender"/>
+    </logger>
+
+    <root level="debug">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="stdout_appender"/>
+    </root>
+
+</configuration>

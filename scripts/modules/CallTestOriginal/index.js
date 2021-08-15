@@ -1,4 +1,13 @@
+/* global log */
+
 ({
+  _setup(moduleName, system, path) {
+    this._loggername = "modules." + moduleName;
+    log.info(this, "Module name: {} my path is: {}", moduleName, path);
+  },
+  getLoggerName() {
+    return this._loggername;
+  },
   saveEmployee(args, ctx) {
     ctx.db.update('default', 'saveEmployee', {
       name: "Demo Test Employee 01",
@@ -16,6 +25,7 @@
     return updated;
   },
   getEmployee(args, ctx) {
+    log.info(ctx, "Can you see me, {} {}", "Now?", "and Tomorrow?");
     return ctx.db.selectOne("default", "getEmployee", {"mobileno": "12345"}, ctx);
   },
   getEmployees(args, ctx) {

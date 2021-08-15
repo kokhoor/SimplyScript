@@ -104,6 +104,7 @@ public class ScriptService {
         poolContext = poolBuilder.build();
         
         ScriptContextInterface ctx = engine.getScriptContext();
+        ctx.init();
         List<String> preload = (List<String>)mapServiceConfig.get("preload");
         if (preload != null) {
             for (String service : preload) {
