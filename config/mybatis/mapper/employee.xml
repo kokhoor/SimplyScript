@@ -3,12 +3,12 @@
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="null">
-  <select id="getEmployee" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+  <select id="getEmployee" parameterType="hashmap" resultType="ciMap" fetchSize="10">
     select * from employee
       WHERE MobileNo=#{mobileno}
   </select>
 
-  <select id="getEmployees" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+  <select id="getEmployees" parameterType="hashmap" resultType="ciMap" fetchSize="10">
     select * from employee
       WHERE MobileNo in 
     <foreach item="mobileno" index="index" collection="mobileno" open="(" separator="," close=")">

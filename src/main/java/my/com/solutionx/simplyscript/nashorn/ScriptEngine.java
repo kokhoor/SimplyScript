@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.github.benmanes.caffeine.cache.Cache;
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.script.CompiledScript;
@@ -184,7 +185,19 @@ public class ScriptEngine implements ScriptEngineInterface {
             module.addSerializer(new ScriptObjectMirrorSerializer(ScriptObjectMirror.class));
             // module.addSerializer(ScriptObjectMirror.class, new ScriptObjectMirrorSerializer());
             mapper.registerModule(module);
-            return mapper.writeValueAsString(ret);
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("success", true);
+            map.put("data", ret);
+            return mapper.writeValueAsString(map);
+        } catch (Exception e) {
+            String out = String.format("%s:%s:%s%n", "Error calling action",
+                    e.getMessage(), e.getClass().getName());
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, Object> map = new HashMap<>();
+            map.put("success", false);
+            map.put("message", out);
+            return mapper.writeValueAsString(out);
         } finally {
             if (scriptContext != null) {
               scriptContext.release();

@@ -8,6 +8,9 @@
     <setting name="defaultFetchSize" value="100"/>
     <setting name="defaultResultSetType" value="FORWARD_ONLY"/>
   </settings>
+  <typeAliases>
+    <typeAlias alias="ciMap" type="org.apache.commons.collections4.map.CaseInsensitiveMap"/>
+  </typeAliases>
   <environments default="default">
     <environment id="default">
       <transactionManager type="JDBC">

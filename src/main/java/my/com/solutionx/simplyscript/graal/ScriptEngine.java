@@ -22,6 +22,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -30,15 +31,12 @@ import my.com.solutionx.simplyscript.PoolableScriptContext;
 import my.com.solutionx.simplyscript.ScriptContextInterface;
 import my.com.solutionx.simplyscript.ScriptEngineInterface;
 import my.com.solutionx.simplyscript.ScriptService;
-import my.com.solutionx.simplyscript.nashorn.ScriptObjectMirrorSerializer;
 import stormpot.PoolException;
 
-import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
-import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
 import stormpot.Timeout;
 
 /**
@@ -147,11 +145,21 @@ public class ScriptEngine implements ScriptEngineInterface {
 
             ObjectMapper mapper = new ObjectMapper();
             SimpleModule module = new SimpleModule();
-            module.addSerializer(new ScriptObjectMirrorSerializer(ScriptObjectMirror.class));
-            // module.addSerializer(ScriptObjectMirror.class, new ScriptObjectMirrorSerializer());
+            // module.addSerializer(new ScriptObjectMirrorSerializer(ScriptObjectMirror.class));
             mapper.registerModule(module);
-            return mapper.writeValueAsString(ret);
 
+            Map<String, Object> map = new HashMap<>();
+            map.put("success", true);
+            map.put("data", ret);
+            return mapper.writeValueAsString(map);
+        } catch (Exception e) {
+            String out = String.format("%s:%s:%s%n", "Error calling action",
+                    e.getMessage(), e.getClass().getName());
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, Object> map = new HashMap<>();
+            map.put("success", false);
+            map.put("message", out);
+            return mapper.writeValueAsString(out);
         } finally {
             if (scriptContext != null) {
               scriptContext.release();

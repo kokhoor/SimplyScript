@@ -16,7 +16,6 @@
 package my.com.solutionx.simplyscript.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.undertow.Undertow;
 import io.undertow.Handlers;
 import io.undertow.Undertow.Builder;
@@ -43,7 +42,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.net.ssl.KeyManager;
@@ -54,10 +52,8 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.script.ScriptException;
 import my.com.solutionx.simplyscript.ScriptService;
 import my.com.solutionx.simplyscript.ScriptServiceException;
-import my.com.solutionx.simplyscript.nashorn.ScriptObjectMirrorSerializer;
 import org.ini4j.Profile.Section;
 import org.ini4j.Wini;
-import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
 import stormpot.PoolException;
 
 public class UndertowServer {
@@ -153,28 +149,9 @@ public class UndertowServer {
             PathTemplateMatch pathMatch = exchange.getAttachment(PathTemplateMatch.ATTACHMENT_KEY);
             String module = pathMatch.getParameters().get("module");
             String method = pathMatch.getParameters().get("method");
-            Object response = null;
-            try {
-                response = engine.action(module + "." + method, mapArgs);
-                ObjectMapper mapper = new ObjectMapper();
-                var simple_module = new SimpleModule();
-                simple_module.addSerializer(new ScriptObjectMirrorSerializer(ScriptObjectMirror.class));
-                mapper.registerModule(simple_module);
-                Map<String, Object> map = new HashMap<>();
-                map.put("success", true);
-                map.put("data", response);
-                response = mapper.writeValueAsString(map);
-            } catch (Exception e) {
-                String out = String.format("%s:%s:%s%n", "UndertowServer:Error calling action",
-                        e.getMessage(), e.getClass().getName());
-                ObjectMapper mapper = new ObjectMapper();
-                Map<String, Object> map = new HashMap<>();
-                map.put("success", false);
-                map.put("message", out);
-                response = mapper.writeValueAsString(out);
-            }
+            String response = engine.actionReturnString(module + "." + method, mapArgs);
             exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-            exchange.getResponseSender().send(response.toString());
+            exchange.getResponseSender().send(response);
         }
     }
     
