@@ -29,8 +29,8 @@ public interface ScriptContextInterface {
 
     public void cleanup();
 
-    public Object service(String service) throws ScriptException;
+    public Object service(String service, Object ctx) throws ScriptException;
 
-    public Object module(String service);
+    public Object module(String service, Object ctx);
     
 }

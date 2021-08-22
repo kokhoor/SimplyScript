@@ -162,7 +162,6 @@ public class ScriptEngine implements ScriptEngineInterface {
         Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
         PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
         try {
-            // ScriptObjectMirror ctxConstructor = (ScriptObjectMirror)scriptContext.getScriptContext().ctxConstructor();
             ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.newObject(scriptContext.getScriptContext());
             return ctx.callMember("call", action, args);
         } finally {
@@ -173,13 +172,9 @@ public class ScriptEngine implements ScriptEngineInterface {
     }
 
     public String actionReturnString(String action, Object args) throws ScriptException, PoolException, InterruptedException, JsonProcessingException {
-        Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
-        PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
         try {
             // ScriptObjectMirror ctxConstructor = (ScriptObjectMirror)scriptContext.getScriptContext().ctxConstructor();
-            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.newObject(scriptContext.getScriptContext());
-            Object ret = ctx.callMember("call", action, args);
-            
+            Object ret = action(action, args);
             ObjectMapper mapper = new ObjectMapper();
             SimpleModule module = new SimpleModule();
             module.addSerializer(new ScriptObjectMirrorSerializer(ScriptObjectMirror.class));
@@ -198,10 +193,6 @@ public class ScriptEngine implements ScriptEngineInterface {
             map.put("success", false);
             map.put("message", out);
             return mapper.writeValueAsString(out);
-        } finally {
-            if (scriptContext != null) {
-              scriptContext.release();
-            }
         }
     }
 }

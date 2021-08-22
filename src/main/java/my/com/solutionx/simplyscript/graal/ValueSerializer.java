@@ -13,41 +13,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package my.com.solutionx.simplyscript.nashorn;
+package my.com.solutionx.simplyscript.graal;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import java.io.IOException;
-import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
+import org.graalvm.polyglot.Value;
 
-public class ScriptObjectMirrorSerializer extends StdSerializer<ScriptObjectMirror> {
+public class ValueSerializer extends StdSerializer<Value> {
 
-    public ScriptObjectMirrorSerializer() {
+    public ValueSerializer() {
         this(null);
     }
 
-    public ScriptObjectMirrorSerializer(Class t) {
+    public ValueSerializer(Class t) {
         super(t);
     }
 
     @Override
-    public void serialize(ScriptObjectMirror t, JsonGenerator jg, SerializerProvider sp) throws IOException {
-        if (t.isArray()) {
-            jg.writeStartArray(t.size());
-            for (int i=0; i<t.size(); i++) {
-                jg.writeObject(t.getSlot(i));
+    public void serialize(Value t, JsonGenerator jg, SerializerProvider sp) throws IOException {
+        if (t.hasArrayElements()) {
+            long arraySize = t.getArraySize();
+            jg.writeStartArray(arraySize);
+            for (int i=0; i<arraySize; i++) {
+                jg.writeObject(t.getArrayElement(i));
             }
             jg.writeEndArray();
-        } else if (t.isFunction()) {
-            jg.writeString(t.getDefaultValue(String.class).toString());
-        } else {
+        } else if (t.isHostObject()) {
+            jg.writeObject(t.asHostObject());
+        } else if (t.hasMembers()) {
             jg.writeStartObject();
-            for (String key : t.keySet()) {
+            for (String key : t.getMemberKeys()) {
                 jg.writeFieldName(key);
-                jg.writeObject(t.get(key));
+                jg.writeObject(t.getMember(key));
             }
             jg.writeEndObject();
+        } else {
+            jg.writeString(t.asString());
         }
     }
 }

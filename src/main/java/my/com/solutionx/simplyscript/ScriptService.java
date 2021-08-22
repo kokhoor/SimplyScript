@@ -108,14 +108,14 @@ public class ScriptService {
         List<String> preload = (List<String>)mapServiceConfig.get("preload");
         if (preload != null) {
             for (String service : preload) {
-                ctx.service(service);
+                ctx.service(service, ctx);
             }
         }
 
         preload = (List<String>)mapModuleConfig.get("preload");
         if (preload != null) {
-            for (String service : preload) {
-                ctx.module(service);
+            for (String module : preload) {
+                ctx.module(module, ctx);
             }
         }
     }

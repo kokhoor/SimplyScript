@@ -136,16 +136,12 @@ public class ScriptEngine implements ScriptEngineInterface {
 
     @Override
     public String actionReturnString(String action, Object args) throws ScriptException, PoolException, InterruptedException, JsonProcessingException {
-        Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
-        PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
         try {
-            Value ctx = (Value)ctxConstructor.newInstance(scriptContext.getScriptContext());
-            Value callable = ctx.getMember("call");
-            Object ret = callable.execute(action, args);
+            Object ret = action(action, args);
 
             ObjectMapper mapper = new ObjectMapper();
             SimpleModule module = new SimpleModule();
-            // module.addSerializer(new ScriptObjectMirrorSerializer(ScriptObjectMirror.class));
+            module.addSerializer(new ValueSerializer(Value.class));
             mapper.registerModule(module);
 
             Map<String, Object> map = new HashMap<>();
@@ -160,10 +156,6 @@ public class ScriptEngine implements ScriptEngineInterface {
             map.put("success", false);
             map.put("message", out);
             return mapper.writeValueAsString(out);
-        } finally {
-            if (scriptContext != null) {
-              scriptContext.release();
-            }
         }
     }
 

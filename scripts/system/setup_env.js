@@ -27,7 +27,7 @@ ctxObject.prototype = {
     var module = action.substring(0, idx);
     var method = action.substring(idx+1);
 
-    var objModule = this.localContext.module(module);
+    var objModule = this.localContext.module(module, this);
     if (objModule == null)
       throw new Error("Module not found: " + module);
 
@@ -74,11 +74,11 @@ ctxObject.prototype = {
     }
   },
   service(name) {
-    return this.localContext.service(name);
+    return this.localContext.service(name, this);
   }
 };
 
-ctxObject.serviceSetup = function(serviceName, system) {
+ctxObject.serviceSetup = function(serviceName, system, ctx) {
   if (this._config.service.deny != null) {
     if (serviceName in this._config.service.deny) {
       return null;
@@ -105,7 +105,7 @@ ctxObject.serviceSetup = function(serviceName, system) {
     return null;
 
   if ("_setup" in service) {
-    setupData = service._setup(serviceName, system, path);
+    setupData = service._setup(serviceName, system, path, ctx);
   }
   if (setupData == null)
     return service;
@@ -127,7 +127,7 @@ ctxObject.serviceSetup = function(serviceName, system) {
   return service;
 };
 
-ctxObject.moduleSetup = function (moduleName, system, loader) {
+ctxObject.moduleSetup = function (moduleName, system, ctx) {
   if (this._config.module.deny != null) {
     if (moduleName in this._config.module.deny) {
       return null;
@@ -149,7 +149,7 @@ ctxObject.moduleSetup = function (moduleName, system, loader) {
   var path = `${this._config.module.path}/${scriptName}/`;
   var module = load(path + 'index.js');
   if ("_setup" in module) {
-    setupData = module._setup(moduleName, system, path);
+    setupData = module._setup(moduleName, system, path, ctx);
   }
   return module;
 };
