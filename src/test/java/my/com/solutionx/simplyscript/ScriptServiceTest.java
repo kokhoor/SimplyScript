@@ -53,6 +53,9 @@ public class ScriptServiceTest {
         System.out.println("getEmployee: " + ret);
         ret = engine.action("CallTest.getEmployees", args);
         System.out.println("getEmployees: " + ret);
+
+        engine.reload();
+
         ret = engine.action("CallTest.saveEmployee", args);
         System.out.println("saveEmployee: " + ret);
     }

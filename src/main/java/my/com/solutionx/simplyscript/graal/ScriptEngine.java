@@ -227,4 +227,19 @@ public class ScriptEngine implements ScriptEngineInterface {
     public void addClasspath(String path)  throws MalformedURLException {
         scriptService.get().addClasspath(path);
     }
+
+    @Override
+    public void shutdown() {
+        if (scriptService != null)
+            scriptService.clear();
+        scriptService = null;
+        if (ctx != null)
+            ctx.cleanup();
+        ctx = null;
+        initScript = null;
+        ctxConstructor = null;
+        hostAccess = null;
+        if (engine != null)
+            engine.close();
+    }
 }

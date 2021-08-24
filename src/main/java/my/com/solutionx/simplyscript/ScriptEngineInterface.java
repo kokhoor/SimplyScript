@@ -37,4 +37,5 @@ public interface ScriptEngineInterface {
     public String actionReturnString(String action, Object args) throws ScriptException, PoolException, InterruptedException, JsonProcessingException;
 
     public void addClasspath(String path) throws MalformedURLException;
+    public void shutdown();
 }

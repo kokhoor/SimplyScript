@@ -6,14 +6,16 @@ function mybatis() {
 
 mybatis.prototype = {
   _init() {
+  },
+  _setup(serviceName, system, path, ctx) {
+    ctx.addClasspath(path + 'dependency/');
+    ctx.addClasspath(path + 'dependency/*.jar');
     const FileReader = Java.type('java.io.FileReader');
     this.configReader = new FileReader("config/mybatis/environment.xml");
     this.properties = new (Java.type('java.util.Properties'))();
     this.properties.load(new FileReader("config/mybatis/datasource.properties"));
     this.dbFactories = {};
     this.factoryBuilder = Java.type('org.apache.ibatis.session.SqlSessionFactoryBuilder');
-  },
-  _setup(serviceName, system, path) {
 /*
     let db = curry_pre([this], this.db);
     db.DB = this.DB;

@@ -55,12 +55,14 @@ public class ScriptService {
     Map<String, Object> system = new ConcurrentHashMap<>();
     Map<String, Object> services = new ConcurrentHashMap<>();
     SimplyScriptClassLoader loader = null;
+    Map<String, String> config = null;
 
     public ScriptService() throws ScriptException {
         super();
     }
     
     public void init(Map<String, String> config) throws FileNotFoundException, IOException, ScriptException, PoolException, InterruptedException, ScriptServiceException, InvocationTargetException {
+        this.config = config;
         loader = new SimplyScriptClassLoader("SimplyScriptService", new URL[] {}, this.getClass().getClassLoader() );
         Thread.currentThread().setContextClassLoader(loader);
         String config_path = config.getOrDefault("config_path", "./config/");
@@ -259,5 +261,41 @@ public class ScriptService {
     
     public ClassLoader getClassLoader() {
         return loader;
+    }
+    
+    public void reload() throws IOException, FileNotFoundException, ScriptException, PoolException, InterruptedException, ScriptServiceException, InvocationTargetException {
+        if (poolContext != null)
+            poolContext.shutdown();
+        poolContext = null;
+
+        if (engine != null)
+            engine.shutdown();
+        engine = null;
+
+        try {
+            if (loader != null)
+                loader.close();
+        } catch (IOException ex) {
+        }
+        loader = null;
+
+        if (modules != null)
+            modules.cleanUp();
+
+        if (app != null)
+            app.clear();
+
+        if (cache != null)
+            cache.cleanUp();
+
+        if (system != null) {
+            system.clear();
+        }
+
+        if (services != null) {
+            services.clear();
+        }
+
+        init(config);
     }
 }

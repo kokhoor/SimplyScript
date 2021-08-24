@@ -16,6 +16,7 @@
 package my.com.solutionx.simplyscript.graal;
 
 import java.lang.ref.WeakReference;
+import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.script.ScriptException;
@@ -104,6 +105,10 @@ public class ScriptContext implements ScriptContextInterface{
 
     public Object req(String key, Object value) {
         return request.put(key, value);
+    }
+
+    public void addClasspath(String path) throws MalformedURLException {
+        global.get().addClasspath(path);
     }
 
     public void recycle() {
