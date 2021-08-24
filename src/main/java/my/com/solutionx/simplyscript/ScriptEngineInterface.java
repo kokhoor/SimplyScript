@@ -17,6 +17,7 @@ package my.com.solutionx.simplyscript;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.Map;
 import javax.script.ScriptException;
 import stormpot.PoolException;
@@ -34,4 +35,6 @@ public interface ScriptEngineInterface {
 
     public Object action(String action, Object args) throws ScriptException, PoolException, InterruptedException;
     public String actionReturnString(String action, Object args) throws ScriptException, PoolException, InterruptedException, JsonProcessingException;
+
+    public void addClasspath(String path) throws MalformedURLException;
 }

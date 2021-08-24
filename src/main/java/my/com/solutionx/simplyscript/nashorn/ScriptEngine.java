@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.github.benmanes.caffeine.cache.Cache;
 import java.lang.ref.WeakReference;
+import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -54,7 +55,8 @@ public class ScriptEngine implements ScriptEngineInterface {
         String scripts_path = config.getOrDefault("scripts_path", "./scripts/");
 
         NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
-        this.engine = (NashornScriptEngine) factory.getScriptEngine(new String[] { "--optimistic-types=false", "--language=es6" });
+        this.engine = (NashornScriptEngine) factory.getScriptEngine(new String[] { "--optimistic-types=false", "--language=es6" },
+                scriptService.getClassLoader());
 
         ScriptContext currentCtx = new SimpleScriptContext();
         initScript = (CompiledScript)engine.compile("load('" + scripts_path + "init.js')");
@@ -194,5 +196,10 @@ public class ScriptEngine implements ScriptEngineInterface {
             map.put("message", out);
             return mapper.writeValueAsString(out);
         }
+    }
+
+    @Override
+    public void addClasspath(String path) throws MalformedURLException {
+        scriptService.get().addClasspath(path);
     }
 }

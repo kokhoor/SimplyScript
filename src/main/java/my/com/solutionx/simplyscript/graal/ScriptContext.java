@@ -33,9 +33,10 @@ public class ScriptContext implements ScriptContextInterface{
     Map<String, Object> request = new HashMap<>();
     final Context ctx;
 
-    ScriptContext(ScriptEngine global, HostAccess hostAccess) {
+    ScriptContext(ScriptEngine global, HostAccess hostAccess, ClassLoader classLoader) {
         this.global = new WeakReference<>(global);
-        ctx = Context.newBuilder("js").engine(global.engine)
+        ctx = Context.newBuilder("js").hostClassLoader(classLoader)
+                .engine(global.engine)
                 .allowAllAccess(true)
                 .allowValueSharing(true)
                 .allowHostAccess(hostAccess)

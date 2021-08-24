@@ -19,11 +19,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,12 +54,15 @@ public class ScriptService {
             .build();
     Map<String, Object> system = new ConcurrentHashMap<>();
     Map<String, Object> services = new ConcurrentHashMap<>();
+    SimplyScriptClassLoader loader = null;
 
     public ScriptService() throws ScriptException {
         super();
     }
     
     public void init(Map<String, String> config) throws FileNotFoundException, IOException, ScriptException, PoolException, InterruptedException, ScriptServiceException, InvocationTargetException {
+        loader = new SimplyScriptClassLoader("SimplyScriptService", new URL[] {}, this.getClass().getClassLoader() );
+        Thread.currentThread().setContextClassLoader(loader);
         String config_path = config.getOrDefault("config_path", "./config/");
         String working_path = config.getOrDefault("working_path", "./");
         String scripts_path= config.getOrDefault("scripts_path", "./scripts/");
@@ -222,4 +228,36 @@ public class ScriptService {
         return engine.actionReturnString(action, args);        
     }
 
+    public void addClasspath(String strFile) throws MalformedURLException {
+        File file = new File(strFile);
+        String[] files;
+        int i;
+        files = SimpleFileFilter.fileOrFiles(file);
+        if (files != null) {
+            for (i = 0; i < files.length; i++) {
+                file = new File(file.getParent() + File.separatorChar + files[i]);
+                // Check to see if we have proper access.
+                if (!file.exists()) {
+                    throw new IllegalArgumentException("Repository " + file.getAbsolutePath() + " doesn't exist!");
+                } else if (!file.canRead()) {
+                    throw new IllegalArgumentException("Do not have read access for file " + file.getAbsolutePath());
+                }
+
+                // Check that it is a directory or zip/jar file
+                if (file.isDirectory()) {
+                    continue;
+                }
+
+                loader.addURL(file.toURL());
+            }
+        } else if (file.exists() && file.isDirectory()) {
+            loader.addURL(file.toURL());
+        } else {
+            System.out.println("Ignored : " + file.getPath());
+        }
+    }
+    
+    public ClassLoader getClassLoader() {
+        return loader;
+    }
 }

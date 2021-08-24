@@ -22,6 +22,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,7 +97,7 @@ public class ScriptEngine implements ScriptEngineInterface {
 
     @Override
     public ScriptContextInterface getScriptContext() {
-        return new ScriptContext(this, hostAccess);
+        return new ScriptContext(this, hostAccess, scriptService.get().getClassLoader());
     }
 
     @Override
@@ -221,5 +222,9 @@ public class ScriptEngine implements ScriptEngineInterface {
 
     Value ctxConstructor() {
         return ctxConstructor;
+    }
+    
+    public void addClasspath(String path)  throws MalformedURLException {
+        scriptService.get().addClasspath(path);
     }
 }
