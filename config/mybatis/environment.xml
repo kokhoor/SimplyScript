@@ -24,8 +24,7 @@
         <property name="password" value="${password}"/>
         <property name="defaultAutoCommit" value="false"/>
         <property name="poolMaximumActiveConnections" value="100"/>
-        <property name="poolMaximumIdleConnections" value="20"/>
-        
+        <property name="poolMaximumIdleConnections" value="20"/>        
       </dataSource>
     </environment>
   </environments>

@@ -1,7 +1,7 @@
 /* global log */
 
 ({
-  _setup(moduleName, system, path) {
+  _setup(moduleName, args, system, path, ctx) {
     this._loggername = "modules." + moduleName;
     log.info(this, "Module name: {} my path is: {}", moduleName, path);
   },
@@ -9,13 +9,13 @@
     return this._loggername;
   },
   saveEmployee(args, ctx) {
-    ctx.db.update('default', 'saveEmployee', {
+    ctx.db.update(null, 'saveEmployee', {
       name: "Demo Test Employee 01",
       contactno: "do not contact me",
       emailaddress: "demotest01@demotest.com",
       mobileno: "12345"
     }, ctx);
-    var db = ctx.db.get('default', ctx);
+    var db = ctx.db.get(null, ctx);
     var updated = db.update("saveEmployee", {
       name: "Demo Test Employee 01",
       contactno: "contact me!",
@@ -26,14 +26,14 @@
   },
   getEmployee(args, ctx) {
     log.info(ctx, "Can you see me, {} {}", "Now?", "and Tomorrow?");
-    return ctx.db.selectOne("default", "getEmployee", {"mobileno": "12345"}, ctx);
+    return ctx.db.selectOne(null, "getEmployee", {"mobileno": "12345"}, ctx);
   },
   getEmployees(args, ctx) {
     var params = {
       "mobileno": ["mobileno", "12345"]
     };
     console.log("Params: " + params);
-    return ctx.db.selectList("default", "getEmployees", params, ctx);
+    return ctx.db.selectList(null, "getEmployees", params, ctx);
   },
   test(args, ctx) {    
     ctx.call("Alert.out", {"str": "String to display"});

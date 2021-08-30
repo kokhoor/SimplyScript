@@ -7,7 +7,9 @@ function mybatis() {
 mybatis.prototype = {
   _init() {
   },
-  _setup(serviceName, system, path, ctx) {
+  _setup(serviceName, args, system, path, ctx) {
+    this._loggername = "services." + serviceName;
+    log.info(this, "Service Name: {}, my path is: {}, args: {}", serviceName, path, args);
     ctx.addClasspath(path + 'dependency/');
     ctx.addClasspath(path + 'dependency/*.jar');
     const FileReader = Java.type('java.io.FileReader');
@@ -16,13 +18,13 @@ mybatis.prototype = {
     this.properties.load(new FileReader("config/mybatis/datasource.properties"));
     this.dbFactories = {};
     this.factoryBuilder = Java.type('org.apache.ibatis.session.SqlSessionFactoryBuilder');
+    this.default_db = args['default'] || null;
+
 /*
     let db = curry_pre([this], this.db);
     db.DB = this.DB;
     db.DB_NEW = this.DB_NEW;
  */
-    this._loggername = "services." + serviceName;
-    log.info(this, "Service Name: {}, my path is: {}", serviceName, path);
     return {
       contextPrototype: this,
       postInnerCall: this.postInnerCall,
@@ -87,7 +89,8 @@ mybatis.prototype = {
 
     if (ctx._dbConn == null)
       ctx._dbConn = {};
-
+ 
+    dbName = dbName || this.default_db;
     if (ctx._dbConn[dbName])
       return ctx._dbConn[dbName];
 
@@ -118,16 +121,28 @@ mybatis.prototype = {
     return db;
   },
   selectOne(dbName, scriptName, parameters, ctx) {
-    var db = this.get(dbName, ctx);
+    var db = this.get(dbName || this.default_db, ctx);
     return db.selectOne(scriptName, parameters);
   },
   selectList(dbName, scriptName, parameters, ctx) {
-    var db = this.get(dbName, ctx);
+    var db = this.get(dbName || this.default_db, ctx);
     return db.selectList(scriptName, parameters);
   },
+  selectCursor(dbName, scriptName, parameters, ctx) {
+    var db = this.get(dbName || this.default_db, ctx);
+    return db.selectCursor(scriptName, parameters);
+  },
+  insert(dbName, scriptName, parameters, ctx) {
+    var db = this.get(dbName || this.default_db, ctx);
+    return db.insert(scriptName, parameters);
+  },
   update(dbName, scriptName, parameters, ctx) {
-    var db = this.get(dbName, ctx);
+    var db = this.get(dbName || this.default_db, ctx);
     return db.update(scriptName, parameters);
+  },
+  delete(dbName, scriptName, parameters, ctx) {
+    var db = this.get(dbName || this.default_db, ctx);
+    return db.delete(scriptName, parameters);
   }
 };
 var service = new mybatis();

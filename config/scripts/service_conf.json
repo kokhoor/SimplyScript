@@ -5,5 +5,10 @@
     "map": {
       "db": "mybatis"
     },
-    "preload": ["db"]
+    "preload": ["db"],
+    "initArguments": {
+        "db": {
+            "default": "default"
+        }
+    }
 }

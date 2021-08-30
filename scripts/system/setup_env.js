@@ -105,7 +105,8 @@ ctxObject.serviceSetup = function(serviceName, system, ctx) {
     return null;
 
   if ("_setup" in service) {
-    setupData = service._setup(serviceName, system, path, ctx);
+    var args = this._config.service.initArguments[serviceName] || {};
+    setupData = service._setup(serviceName, args, system, path, ctx);
   }
   if (setupData == null)
     return service;
@@ -149,7 +150,8 @@ ctxObject.moduleSetup = function (moduleName, system, ctx) {
   var path = `${this._config.module.path}/${scriptName}/`;
   var module = load(path + 'index.js');
   if ("_setup" in module) {
-    setupData = module._setup(moduleName, system, path, ctx);
+    var args = this._config.service.initArguments[moduleName] || {};
+    setupData = module._setup(moduleName, args, system, path, ctx);
   }
   return module;
 };
@@ -175,6 +177,9 @@ ctxObject.config = function (objs) {
       obj.deny = array_to_map(obj.deny);
     }
 
+    if (obj.initArguments == null) {
+      obj.initArguments = {};
+    }
     ctxObject._config[type] = obj;
   }
 
