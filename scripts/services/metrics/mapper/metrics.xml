@@ -6,22 +6,28 @@
   <update id="createMetricsTable" parameterType="hashmap" databaseId="postgres">
     CREATE TABLE IF NOT EXISTS ${table_name} (
       name varchar(128),
-      call_count int not null default(0),
+      call_count int not null default (0),
+      average_time_ms decimal(15,4) not null default (0),
+      total_time_ms bigint not null default (0),
       created_on timestamp not null default current_timestamp,
       updated_on timestamp not null default current_timestamp,
       primary key (name)
     );
   </update>
 
-  <update id="updateMetrics" parameterType="hashmap" databaseId="postgresql">
-    INSERT INTO ${tableName} (name, call_count)
+  <update id="updateMetrics" parameterType="hashmap" databaseId="postgres">
+    INSERT INTO ${table_name} AS t (name, call_count, average_time_ms, total_time_ms)
     VALUES (
       #{name},
-      1
+      1,
+      #{time_taken_ms},
+      #{time_taken_ms}
     )
-    ON CONFLICT (name, DO UPDATE SET
+    ON CONFLICT (name) DO UPDATE SET
       updated_on=CURRENT_TIMESTAMP,
-      call_count=call_count+1;
+      call_count=t.call_count+1,
+      total_time_ms=t.total_time_ms+EXCLUDED.total_time_ms,
+      average_time_ms=(t.total_time_ms+EXCLUDED.total_time_ms) / (t.call_count+1);
   </update>
 
 </mapper>

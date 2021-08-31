@@ -23,16 +23,14 @@ metrics.prototype = {
   _init() {
   },
   _setup(serviceName, args, system, path, ctx) {
+    this._loggername = "services." + serviceName;
     var db_service = args.db_service || "db";
-    console.log("In metrics _setup");
-    console.log(ctx);
-    console.log(db_service);
     this.db = ctx.service(db_service);
 
     this.db_name = args.db_name || null;
     var dbFactory = this.db.getFactory(this.db_name);
     var conf = dbFactory.getConfiguration();
-    console.log("Database id: " + conf.	getDatabaseId());
+    // console.log("Database id: " + conf.	getDatabaseId());
     var filepath = path + "mapper/metrics.xml";
     var reader = new (Java.type("java.io.FileReader"))(filepath);
     var builder = new (Java.type("org.apache.ibatis.builder.xml.XMLMapperBuilder"))(reader, conf, filepath, conf.getSqlFragments());
@@ -46,6 +44,27 @@ metrics.prototype = {
         }, ctx);
       this.db.postCall(ctx);
     }
+
+    return {
+      contextPrototype: this,
+      preCall: {fn: this.preCall, priority: 9000, "this": this },
+      postCall: {fn: this.postCall, priority: 9000, "this": this }
+    };
+  },
+  getLoggerName() {
+    return this._loggername;
+  },
+  preCall(ctx, e) {
+    ctx.start_time = (new Date()).getTime();
+  },
+  postCall(ctx, e) {
+    console.log("Metrics table name: " + this.table_name);
+    var time_taken_ms = (new Date()).getTime() - ctx.start_time;
+    ctx.db.update(this.db_name, 'metrics.updateMetrics', {
+      table_name: this.table_name,
+      name: ctx.getLoggerName(),
+      time_taken_ms: time_taken_ms
+    }, ctx);
   }
 };
 var service = new metrics();

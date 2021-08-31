@@ -37,11 +37,12 @@ ctxObject.prototype = {
     this.callStack.push(action);
     try {
       var preCall = this.callDepth <= 0 ? this.localContext.system("preCall") : this.localContext.system("preInnerCall");
-      if (preCall != null) {
-        for (var i=0; i<preCall.length; i++) {
+      if (preCall !== null) {
+        for (var i=0; i<preCall.items.length; i++) {
           try {
-            preCall[i](this, null, action, args);
+            preCall.items[i].fn.call(preCall.items[i]['this'], this, null, action, args);
           } catch (e) {
+            console.log("preCall error: " + e);
           }
         }
       }
@@ -49,11 +50,12 @@ ctxObject.prototype = {
       var ret = objModule[method](args, this);
 
       var postCall = this.callDepth <= 0 ? this.localContext.system("postCall") : this.localContext.system("postInnerCall");
-      if (postCall != null) {
-        for (var i=0; i<postCall.length; i++) {
+      if (postCall !== null) {
+        for (var i=0; i<postCall.items.length; i++) {
           try {
-            postCall[i](this, null, action, args);
+            postCall.items[i].fn.call(postCall.items[i]['this'], this, null, action, args);
           } catch (e) {
+            console.log("postCall error: " + e);
           }
         }
       }
@@ -61,11 +63,12 @@ ctxObject.prototype = {
       return ret;
     } catch (e) {
       var postCall = this.callDepth <= 0 ? this.localContext.system("postCall") : this.localContext.system("postInnerCall");
-      if (postCall != null) {
-        for (var i=0; i<postCall.length; i++) {
+      if (postCall !== null) {
+        for (var i=0; i<postCall.items.length; i++) {
           try {
-            postCall[i](this, e, action, args);
+            postCall.items[i].fn.call(postCall.items[i]['this'], this, e, action, args);
           } catch (e) {
+            console.log("postCall error: " + e);
           }
         }
       }
