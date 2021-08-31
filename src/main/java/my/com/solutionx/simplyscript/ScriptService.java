@@ -110,21 +110,18 @@ public class ScriptService {
         PoolBuilder<PoolableScriptContext> poolBuilder = Pool.from(allocator);
         poolBuilder = poolBuilder.setSize(Integer.valueOf(pool_size));
         poolContext = poolBuilder.build();
-        
+/*
         ScriptContextInterface ctx = engine.getScriptContext();
         ctx.init();
+*/
         List<String> preload = (List<String>)mapServiceConfig.get("preload");
         if (preload != null) {
-            for (String service : preload) {
-                ctx.service(service, ctx);
-            }
+            engine.loadServices(preload);
         }
 
         preload = (List<String>)mapModuleConfig.get("preload");
         if (preload != null) {
-            for (String module : preload) {
-                ctx.module(module, ctx);
-            }
+            engine.loadModules(preload);
         }
     }
 

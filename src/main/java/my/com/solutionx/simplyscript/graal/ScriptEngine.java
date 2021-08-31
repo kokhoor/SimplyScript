@@ -129,6 +129,53 @@ public class ScriptEngine implements ScriptEngineInterface {
     }
 
     @Override
+    public void loadServices(List<String> services) throws ScriptException, PoolException, InterruptedException {
+        Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
+        PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
+        try {
+            Value ctx = (Value)ctxConstructor.newInstance(scriptContext.getScriptContext());
+            Value callable = ctx.getMember("service");
+            for (String name : services)
+                callable.execute(name);
+        } finally {
+            if (scriptContext != null) {
+              scriptContext.release();
+            }
+        }
+    }
+
+    @Override
+    public void loadModules(List<String> modules) throws ScriptException, PoolException, InterruptedException {
+        Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
+        PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
+        try {
+            Value ctx = (Value)ctxConstructor.newInstance(scriptContext.getScriptContext());
+            Value callable = ctx.getMember("module");
+            for (String name : modules)
+                callable.execute(name);
+        } finally {
+            if (scriptContext != null) {
+              scriptContext.release();
+            }
+        }
+    }
+
+    @Override
+    public Object getModule(String name) throws ScriptException, PoolException, InterruptedException {
+        Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
+        PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
+        try {
+            Value ctx = (Value)ctxConstructor.newInstance(scriptContext.getScriptContext());
+            Value callable = ctx.getMember("module");
+            return callable.execute(name);
+        } finally {
+            if (scriptContext != null) {
+              scriptContext.release();
+            }
+        }
+    }
+
+    @Override
     public Object action(String action, Object args) throws ScriptException, PoolException, InterruptedException {
         Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
         PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);

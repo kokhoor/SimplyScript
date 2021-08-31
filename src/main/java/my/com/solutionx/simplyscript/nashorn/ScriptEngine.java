@@ -22,6 +22,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.script.CompiledScript;
@@ -91,6 +92,25 @@ public class ScriptEngine implements ScriptEngineInterface {
         return engine.eval(script, (ScriptContext)ctx);
     }
  
+    public void loadServices(List<String> services) throws ScriptException, PoolException, InterruptedException {
+        if (services == null || services.isEmpty())
+            return;
+
+        Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
+        PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
+        try {
+            // ScriptObjectMirror ctxConstructor = (ScriptObjectMirror) ((NashornScriptContext)scriptContext.getScriptContext()).ctxConstructor();
+            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.newObject(scriptContext.getScriptContext());
+            services.forEach(name -> {
+                ctx.callMember("service", name);
+            });
+        } finally {
+            if (scriptContext != null) {
+              scriptContext.release();
+            }
+        }
+    }
+
     public Object getService(String name) throws ScriptException, PoolException, InterruptedException {
         Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
         PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
@@ -98,6 +118,39 @@ public class ScriptEngine implements ScriptEngineInterface {
             // ScriptObjectMirror ctxConstructor = (ScriptObjectMirror) ((NashornScriptContext)scriptContext.getScriptContext()).ctxConstructor();
             ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.newObject(scriptContext.getScriptContext());
             return ctx.callMember("service", name);
+        } finally {
+            if (scriptContext != null) {
+              scriptContext.release();
+            }
+        }
+    }
+
+    public void loadModules(List<String> modules) throws ScriptException, PoolException, InterruptedException {
+        if (modules == null || modules.isEmpty())
+            return;
+
+        Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
+        PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
+        try {
+            // ScriptObjectMirror ctxConstructor = (ScriptObjectMirror) ((NashornScriptContext)scriptContext.getScriptContext()).ctxConstructor();
+            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.newObject(scriptContext.getScriptContext());
+            modules.forEach(name -> {
+                ctx.callMember("module", name);
+            });
+        } finally {
+            if (scriptContext != null) {
+              scriptContext.release();
+            }
+        }
+    }
+
+    public Object getModule(String name) throws ScriptException, PoolException, InterruptedException {
+        Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
+        PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
+        try {
+            // ScriptObjectMirror ctxConstructor = (ScriptObjectMirror) ((NashornScriptContext)scriptContext.getScriptContext()).ctxConstructor();
+            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.newObject(scriptContext.getScriptContext());
+            return ctx.callMember("module", name);
         } finally {
             if (scriptContext != null) {
               scriptContext.release();

@@ -28,6 +28,13 @@
       </dataSource>
     </environment>
   </environments>
+  <databaseIdProvider type="DB_VENDOR">
+    <property name="SQL Server" value="sqlserver"/>
+    <property name="PostgreSQL" value="postgres"/>
+    <property name="MySQL" value="mysql"/>
+    <property name="DB2" value="db2"/>
+    <property name="Oracle" value="oracle" />
+  </databaseIdProvider>
   <mappers>
     <mapper url="file:config/mybatis/mapper/employee.xml"></mapper>
   </mappers>

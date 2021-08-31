@@ -1,3 +1,19 @@
+/* 
+ * Copyright 2021 SolutionX Software Sdn Bhd &lt;info@solutionx.com.my&gt;.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* global moment, Java */
 (function() {
   
@@ -10,8 +26,8 @@ mybatis.prototype = {
   _setup(serviceName, args, system, path, ctx) {
     this._loggername = "services." + serviceName;
     log.info(this, "Service Name: {}, my path is: {}, args: {}", serviceName, path, args);
-    ctx.addClasspath(path + 'dependency/');
-    ctx.addClasspath(path + 'dependency/*.jar');
+    ctx.localContext.addClasspath(path + 'dependency/');
+    ctx.localContext.addClasspath(path + 'dependency/*.jar');
     const FileReader = Java.type('java.io.FileReader');
     this.configReader = new FileReader("config/mybatis/environment.xml");
     this.properties = new (Java.type('java.util.Properties'))();
@@ -79,6 +95,14 @@ mybatis.prototype = {
       }
     }
   },
+  getFactory(dbName) {
+    dbName = dbName || this.default_db;
+    var factory = this.dbFactories[dbName];
+    if (factory == null) {
+      factory = this.dbFactories[dbName] = (new this.factoryBuilder()).build(this.configReader, dbName, this.properties);
+    }
+    return factory;
+  },
   get(dbName, ctx) {
     log.info(this, "We are in the mybatis service.");
 // console.log("in db: " + this.call + ":" + this.call + ":" + dbName + ":" + txType + ":" + this.DB + ":" + this.DB_NEW);
@@ -94,10 +118,7 @@ mybatis.prototype = {
     if (ctx._dbConn[dbName])
       return ctx._dbConn[dbName];
 
-    var factory = this.dbFactories[dbName];
-    if (factory == null) {
-      factory = this.dbFactories[dbName] = (new this.factoryBuilder()).build(this.configReader, dbName, this.properties);
-    }
+    var factory = this.getFactory(dbName);
     var db = ctx._dbConn[dbName] = factory.openSession();
     return db;
   },
@@ -111,11 +132,7 @@ mybatis.prototype = {
     if (ctx._dbConnNew == null)
       ctx._dbConnNew = [];
 
-    var factory = this.dbFactories[dbName];
-    if (factory == null) {
-      factory = this.dbFactories[dbName] = (new this.factoryBuilder()).build(this.configReader, dbName, this.properties);
-    }
-
+    var factory = this.getFactory(dbName);
     var db = factory.openSession();
     ctx._dbConnNew.push(db);
     return db;

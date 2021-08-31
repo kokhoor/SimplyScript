@@ -5,8 +5,14 @@
     "map": {
       "db": "mybatis"
     },
-    "preload": ["db"],
+    "preload": ["metrics"],
     "initArguments": {
+        "metrics": {
+          "db_service": "db",
+          "db_name": null,
+          "table_name": "metrics_stats",
+          "create_table": true
+        },
         "db": {
             "default": "default"
         }

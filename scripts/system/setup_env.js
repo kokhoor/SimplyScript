@@ -77,6 +77,9 @@ ctxObject.prototype = {
   },
   service(name) {
     return this.localContext.service(name, this);
+  },
+  module(name) {
+    return this.localContext.module(module, this);
   }
 };
 

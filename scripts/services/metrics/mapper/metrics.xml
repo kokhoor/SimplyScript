@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="metrics">
+  <update id="createMetricsTable" parameterType="hashmap" databaseId="postgres">
+    CREATE TABLE IF NOT EXISTS ${table_name} (
+      name varchar(128),
+      call_count int not null default(0),
+      created_on timestamp not null default current_timestamp,
+      updated_on timestamp not null default current_timestamp,
+      primary key (name)
+    );
+  </update>
+
+  <update id="updateMetrics" parameterType="hashmap" databaseId="postgresql">
+    INSERT INTO ${tableName} (name, call_count)
+    VALUES (
+      #{name},
+      1
+    )
+    ON CONFLICT (name, DO UPDATE SET
+      updated_on=CURRENT_TIMESTAMP,
+      call_count=call_count+1;
+  </update>
+
+</mapper>
