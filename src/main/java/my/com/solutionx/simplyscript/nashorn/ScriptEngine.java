@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 import javax.script.CompiledScript;
 import javax.script.ScriptContext;
 import javax.script.ScriptException;
-import javax.script.SimpleScriptContext;
 import my.com.solutionx.simplyscript.PoolableScriptContext;
 import my.com.solutionx.simplyscript.ScriptContextInterface;
 import my.com.solutionx.simplyscript.ScriptEngineInterface;
@@ -47,18 +46,21 @@ public class ScriptEngine implements ScriptEngineInterface {
     ScriptObjectMirror ctxConstructor = null;
     NashornScriptEngine engine = null;
     WeakReference<ScriptService> scriptService = null;
+    String scripts_path = null;
+    String config_path = null;
 
     @Override
     public void init(ScriptService scriptService, Map<String, Object> mapScriptConfig) throws ScriptException {
         this.scriptService = new WeakReference<>(scriptService);
         Map<String, String> config = (Map<String, String>) mapScriptConfig.get("config");
-        String scripts_path = config.getOrDefault("scripts_path", "./scripts/");
+        scripts_path = config.getOrDefault("scripts_path", "./scripts/");
+        config_path = config.getOrDefault("config_path", "./config/");
 
         NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
         this.engine = (NashornScriptEngine) factory.getScriptEngine(new String[] { "--optimistic-types=false", "--language=es6" },
                 scriptService.getClassLoader());
 
-        ScriptContext currentCtx = new SimpleScriptContext();
+        NashornScriptContext currentCtx = (NashornScriptContext)getScriptContext();
         initScript = (CompiledScript)engine.compile("load('" + scripts_path + "init.js')");
         initScript.eval(currentCtx);
 
@@ -78,7 +80,10 @@ public class ScriptEngine implements ScriptEngineInterface {
 
     @Override
     public ScriptContextInterface getScriptContext() {
-        return new NashornScriptContext(this);
+        NashornScriptContext scriptContext = new NashornScriptContext(this);
+        scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).put("scripts_path", scripts_path);
+        scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).put("config_path", config_path);
+        return scriptContext;
     }
 
     @Override

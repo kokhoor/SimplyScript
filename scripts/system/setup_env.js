@@ -1,3 +1,5 @@
+load(scripts_path + 'system/priority_list.js');
+console.log(PriorityList);
 (function() {
 
 function ctxObject(localContext) {
@@ -120,9 +122,11 @@ ctxObject.serviceSetup = function(serviceName, system, ctx) {
     var call = setupData[keys[i]];
     if (call != null) {
       var call_array = system[keys[i]];
-      if (call_array == null)
-        call_array = system[keys[i]] = [];
-      call_array.push(call);
+      if (call_array == null) {
+        // if post create ascending list (call low priority to high priority, otherwise descending
+        call_array = system[keys[i]] = new PriorityList(keys[i].startsWith("post"));
+      }
+      call_array.add(call);
     }
   }
   return service;

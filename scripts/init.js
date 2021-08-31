@@ -50,12 +50,12 @@ String.prototype.delimit_quotes = function () {
 };
 
 print("Load dayjs");
-load('scripts/lib/dayjs.min.js');
-load('scripts/lib/dayjs.customParseFormat.js');
+load(scripts_path + 'lib/dayjs.min.js');
+load(scripts_path + 'lib/dayjs.customParseFormat.js');
 dayjs.extend(dayjs_plugin_customParseFormat);
 console.log(dayjs("12-25-1995", "MM-DD-YYYY").format("DD MMM YYYY HH:mm:ss"));
 print("Load numeral");
-load('scripts/lib/numeral.min.js');
+load(scripts_path + 'lib/numeral.min.js');
 print("Loaded all libs");
 
 function curry_pre(arrPre, fn) {
@@ -68,7 +68,7 @@ function curry_pre(arrPre, fn) {
 
 const global = {
     modules: {},
-    math: load('scripts/lib/camel.js'),
+    math: load(scripts_path + 'lib/camel.js'),
     db: {
     },
     utils: {

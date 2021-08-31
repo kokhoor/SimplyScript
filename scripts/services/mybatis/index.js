@@ -27,8 +27,8 @@ mybatis.prototype = {
  */
     return {
       contextPrototype: this,
-      postInnerCall: this.postInnerCall,
-      postCall: this.postCall          
+      postInnerCall: {fn: this.postInnerCall, priority: 10000},
+      postCall: {fn: this.postCall, priority: 10000}
     };
   },
   getLoggerName() {

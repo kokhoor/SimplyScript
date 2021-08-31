@@ -51,12 +51,15 @@ public class ScriptEngine implements ScriptEngineInterface {
     Source initScript = null;
     private Value ctxConstructor;
     HostAccess hostAccess = null;
+    String scripts_path = null;
+    String config_path = null;
 
     @Override
     public void init(ScriptService scriptService, Map<String, Object> mapScriptConfig) throws ScriptException, IOException {
         this.scriptService = new WeakReference<>(scriptService);
         Map<String, String> config = (Map<String, String>) mapScriptConfig.get("config");
-        String scripts_path = config.getOrDefault("scripts_path", "./scripts/");
+        scripts_path = config.getOrDefault("scripts_path", "./scripts/");
+        config_path = config.getOrDefault("config_path", "./config/");
 
         initScript = Source.newBuilder("js", new File(scripts_path + "init.js")).build();
         engine = Engine.create();
@@ -97,7 +100,12 @@ public class ScriptEngine implements ScriptEngineInterface {
 
     @Override
     public ScriptContextInterface getScriptContext() {
-        return new ScriptContext(this, hostAccess, scriptService.get().getClassLoader());
+        ScriptContext scriptContext = new ScriptContext(this, hostAccess, scriptService.get().getClassLoader());
+        Value jsBindings = scriptContext.ctx.getBindings("js");
+        jsBindings.putMember("scripts_path", scripts_path);
+        jsBindings.putMember("config_path", config_path);
+        // scriptContext.ctx.eval("js", "var scripts_path='" + scripts_path + "'");
+        return scriptContext;
     }
 
     @Override
