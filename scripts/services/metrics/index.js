@@ -47,8 +47,8 @@ metrics.prototype = {
 
     return {
       contextPrototype: this,
-      preCall: {fn: this.preCall, priority: 9000, "this": this },
-      postCall: {fn: this.postCall, priority: 9000, "this": this }
+      preCall: {fn: this.preCall, priority: 9000 },
+      postCall: {fn: this.postCall, priority: 9000 }
     };
   },
   getLoggerName() {
@@ -58,13 +58,16 @@ metrics.prototype = {
     ctx.start_time = (new Date()).getTime();
   },
   postCall(ctx, e) {
-    console.log("Metrics table name: " + this.table_name);
-    var time_taken_ms = (new Date()).getTime() - ctx.start_time;
-    ctx.db.update(this.db_name, 'metrics.updateMetrics', {
+    var end_time = (new Date()).getTime();
+    var time_taken_ms = end_time - ctx.start_time;
+    console.log("Start time: " + ctx.start_time + " End time: " + end_time + " Time taken: " + time_taken_ms);
+    var db = this.db.newDb(null, ctx);
+    db.update('metrics.updateMetrics', {
       table_name: this.table_name,
       name: ctx.getLoggerName(),
       time_taken_ms: time_taken_ms
-    }, ctx);
+    });
+    db.commit();
   }
 };
 var service = new metrics();

@@ -21,27 +21,27 @@ let log = {
   },
   trace(where, str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) {
     this._getLogger(where).trace(str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
-  },
-  console_info(str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) {
-    this._getLogger("context").info(str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
-  },
-  console_warn(str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) {
-    this._getLogger("context").warn(str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
-  },
-  console_error(str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) {
-    this._getLogger("context").error(str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
   }
 };
 
 var console = { 
   log: (str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) => {
-    log.console_info(str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
-  },
-  warn: (str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) => {
-    log.console_warn(str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+    log.info("context", str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
   },
   error: (str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) => {
-    log.console_error(str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+    log.error("context", str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+  },
+  warn: (str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) => {
+    log.warn("context", str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+  },
+  info: (str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) => {
+    log.info("context", str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+  },
+  debug: (str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) => {
+    log.debug("context", str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+  },
+  trace: (str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) => {
+    log.trace("context", str, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
   }
 };
 

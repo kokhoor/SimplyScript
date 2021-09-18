@@ -8,7 +8,7 @@
       name varchar(128),
       call_count int not null default (0),
       average_time_ms decimal(15,4) not null default (0),
-      total_time_ms bigint not null default (0),
+      total_time_ms decimal(15,4) not null default (0),
       created_on timestamp not null default current_timestamp,
       updated_on timestamp not null default current_timestamp,
       primary key (name)

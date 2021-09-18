@@ -132,6 +132,8 @@ mybatis.prototype = {
     if (ctx._dbConnNew == null)
       ctx._dbConnNew = [];
 
+    dbName = dbName || this.default_db;
+
     var factory = this.getFactory(dbName);
     var db = factory.openSession();
     ctx._dbConnNew.push(db);

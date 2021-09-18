@@ -49,15 +49,15 @@
         </layout>
     </appender>
 
-    <logger name="modules" level="debug" additivity="false">
+    <logger name="modules" level="info" additivity="false">
         <appender-ref ref="modules_appender"/>
     </logger>
 
-    <logger name="services" level="debug" additivity="false">
+    <logger name="services" level="info" additivity="false">
         <appender-ref ref="services_appender"/>
     </logger>
 
-    <root level="debug">
+    <root level="info">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="stdout_appender"/>
     </root>

@@ -23,6 +23,13 @@ import io.undertow.UndertowOptions;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.BlockingHandler;
+import io.undertow.server.handlers.PathTemplateHandler;
+import io.undertow.server.handlers.form.FormData;
+import io.undertow.server.handlers.form.FormData.FormValue;
+import io.undertow.server.handlers.form.FormDataParser;
+import io.undertow.server.handlers.form.FormEncodedDataDefinition;
+import io.undertow.server.handlers.form.FormParserFactory;
+import io.undertow.server.handlers.form.MultiPartParserDefinition;
 import io.undertow.util.Headers;
 import io.undertow.util.PathTemplateMatch;
 import java.io.BufferedReader;
@@ -86,7 +93,10 @@ public class UndertowServer {
         engine = new ScriptService();
         engine.init(iniMain);
 
-        HttpHandler handlers = new BlockingHandler(Handlers.pathTemplate(false).add("/api/{module}/{method}", new ScriptCallHandler()));
+        var pathTemplateHandler = Handlers.pathTemplate(false);
+        pathTemplateHandler.add("/api/{module}/{method}", new ScriptCallHandler());
+        
+        HttpHandler handlers = new BlockingHandler(pathTemplateHandler);
 
         Builder builder = Undertow.builder();
 
@@ -126,11 +136,31 @@ public class UndertowServer {
         server.start();
     }
 
+    FormParserFactory formParserFactory = FormParserFactory.builder()
+            .addParsers(new MultiPartParserDefinition(),
+                    new FormEncodedDataDefinition()).build();
+
     class ScriptCallHandler implements HttpHandler {
         @Override
         public void handleRequest(HttpServerExchange exchange) throws Exception {
-            BufferedReader br = new BufferedReader(new InputStreamReader(exchange.getInputStream(), StandardCharsets.UTF_8));
-            String inputJSONString = br.lines().collect(Collectors.joining());
+            String contentType = exchange.getRequestHeaders().getFirst("Content-Type");
+            // System.out.println("Content-Type: " + contentType);
+            if (contentType == null)
+                contentType = "";
+
+            String inputJSONString = null;
+            if (contentType.equals("application/json")) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(exchange.getInputStream(), StandardCharsets.UTF_8))) {
+                    inputJSONString = br.lines().collect(Collectors.joining());
+                }
+            } else if (contentType.startsWith("multipart/form-data") || contentType.equals("application/x-www-form-urlencoded")) {
+                FormDataParser parser = FormParserFactory.builder().build().createParser(exchange);
+                FormData formData = parser.parseBlocking();
+                FormValue jsonStringFormValue = formData.getFirst("i");
+                if (jsonStringFormValue != null) {
+                    inputJSONString = jsonStringFormValue.getValue();
+                }
+            }
             if (inputJSONString == null || inputJSONString.length() == 0) {
                 Map<String, Deque<String>> queryParameters = exchange.getQueryParameters();
                 if (queryParameters != null) {
@@ -149,6 +179,7 @@ public class UndertowServer {
             PathTemplateMatch pathMatch = exchange.getAttachment(PathTemplateMatch.ATTACHMENT_KEY);
             String module = pathMatch.getParameters().get("module");
             String method = pathMatch.getParameters().get("method");
+            System.out.printf("Args: %s%n", mapArgs);
             String response = engine.actionReturnString(module + "." + method, mapArgs);
             exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
             exchange.getResponseSender().send(response);

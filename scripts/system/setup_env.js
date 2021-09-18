@@ -26,13 +26,6 @@ ctxObject.prototype = {
     if (idx === -1)
       throw new Error("Invalid action format. Expected XXX.YYY");
 
-    var module = action.substring(0, idx);
-    var method = action.substring(idx+1);
-
-    var objModule = this.localContext.module(module, this);
-    if (objModule == null)
-      throw new Error("Module not found: " + module);
-
     this.callDepth += 1;
     this.callStack.push(action);
     try {
@@ -46,6 +39,13 @@ ctxObject.prototype = {
           }
         }
       }
+
+      var module = action.substring(0, idx);
+      var method = action.substring(idx+1);
+
+      var objModule = this.localContext.module(module, this);
+      if (objModule == null)
+        throw new Error("Module not found: " + module);
 
       var ret = objModule[method](args, this);
 
@@ -131,6 +131,9 @@ ctxObject.serviceSetup = function(serviceName, system, ctx) {
       if (call_array == null) {
         // if post create ascending list (call low priority to high priority, otherwise descending
         call_array = system[keys[i]] = new PriorityList(keys[i].startsWith("post"));
+      }
+      if (!("this" in call)) {
+        call['this'] = service;
       }
       call_array.add(call);
     }
