@@ -23,7 +23,6 @@ import io.undertow.UndertowOptions;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.BlockingHandler;
-import io.undertow.server.handlers.PathTemplateHandler;
 import io.undertow.server.handlers.form.FormData;
 import io.undertow.server.handlers.form.FormData.FormValue;
 import io.undertow.server.handlers.form.FormDataParser;
@@ -49,6 +48,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.net.ssl.KeyManager;
@@ -179,8 +179,10 @@ public class UndertowServer {
             PathTemplateMatch pathMatch = exchange.getAttachment(PathTemplateMatch.ATTACHMENT_KEY);
             String module = pathMatch.getParameters().get("module");
             String method = pathMatch.getParameters().get("method");
-            System.out.printf("Args: %s%n", mapArgs);
-            String response = engine.actionReturnString(module + "." + method, mapArgs);
+            // System.out.printf("Args: %s%n", mapArgs);
+            Map<String, Object> mapReq = new HashMap<>();
+            mapReq.put("headers", exchange.getRequestHeaders());
+            String response = engine.actionReturnString(module + "." + method, mapArgs, mapReq);
             exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
             exchange.getResponseSender().send(response);
         }

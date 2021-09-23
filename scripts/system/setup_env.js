@@ -14,12 +14,35 @@ ctxObject.prototype = {
       return "context";
     return "modules." + this.callStack[this.callStack.length-1];
   },
+  app(key, value) {
+    if (arguments.length > 1) { // is set
+      this.localContext.app(key, value);
+    } else { // is get
+      return  this.localContext.app(key);
+    }
+  },
   cache(key, value) {
     if (arguments.length > 1) { // is set
-      this._services['cache'][key] = value;
+      this.localContext.cache(key, value);
     } else { // is get
-      return this._services['cache'][key];
+      return  this.localContext.cache(key);
     }
+  },
+  req(key, value) {
+    if (arguments.length > 1) { // is set
+      this.localContext.req(key, value);
+    } else { // is get
+      return  this.localContext.req(key);
+    }
+  },
+  setReturn(key, value) {
+    var map_return_key = Java.type("my.com.solutionx.simplyscript.ScriptEngineInterface").OTHER_RETURN_DATA;
+    var map = this.req(map_return_key);
+    if (map == null) {
+      map = {};
+      this.req(map_return_key, map);
+    }
+    map[key] = value;
   },
   call(action, args) {
     var idx = action.lastIndexOf(".");

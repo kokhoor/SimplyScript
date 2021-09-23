@@ -176,9 +176,11 @@ public class ScriptEngine implements ScriptEngineInterface {
     }
 
     @Override
-    public Object action(String action, Object args) throws ScriptException, PoolException, InterruptedException {
+    public Object action(String action, Object args, Map<String,Object> mapReq) throws ScriptException, PoolException, InterruptedException {
         Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
         PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
+        scriptContext.getScriptContext().setRequest(mapReq);
+
         try {
             Value ctx = (Value)ctxConstructor.newInstance(scriptContext.getScriptContext());
             Value callable = ctx.getMember("call");
@@ -191,9 +193,9 @@ public class ScriptEngine implements ScriptEngineInterface {
     }
 
     @Override
-    public String actionReturnString(String action, Object args) throws ScriptException, PoolException, InterruptedException, JsonProcessingException {
+    public String actionReturnString(String action, Object args, Map<String,Object> mapReq) throws ScriptException, PoolException, InterruptedException, JsonProcessingException {
         try {
-            Object ret = action(action, args);
+            Object ret = action(action, args, mapReq);
 
             ObjectMapper mapper = new ObjectMapper();
             SimpleModule module = new SimpleModule();
@@ -205,13 +207,13 @@ public class ScriptEngine implements ScriptEngineInterface {
             map.put("data", ret);
             return mapper.writeValueAsString(map);
         } catch (Exception e) {
-            String out = String.format("%s:%s:%s%n", "Error calling action",
-                    e.getMessage(), e.getClass().getName());
+            String out = e.getMessage(); // String.format("%s:%s:%s%n", "Error calling action",
+                    // e.getMessage(), e.getClass().getName());
             ObjectMapper mapper = new ObjectMapper();
             Map<String, Object> map = new HashMap<>();
             map.put("success", false);
             map.put("message", out);
-            return mapper.writeValueAsString(out);
+            return mapper.writeValueAsString(map);
         }
     }
 

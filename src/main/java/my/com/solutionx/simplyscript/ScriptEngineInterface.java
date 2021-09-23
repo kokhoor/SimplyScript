@@ -28,6 +28,8 @@ import stormpot.PoolException;
  * @author SolutionX Software Sdn. Bhd. &lt;info@solutionx.com.my&gt;
  */
 public interface ScriptEngineInterface {
+    public static final String OTHER_RETURN_DATA = "_ss.other_return_data";
+
     public void init(ScriptService aThis, Map<String, Object> mapScriptConfig) throws ScriptException, IOException;
     public ScriptContextInterface getScriptContext();
     public Object eval(String script, ScriptContextInterface ctx) throws ScriptException;
@@ -38,8 +40,8 @@ public interface ScriptEngineInterface {
     public void loadModules(List<String> modules) throws ScriptException, PoolException, InterruptedException;
     public Object getModule(String name)  throws ScriptException, PoolException, InterruptedException;
     
-    public Object action(String action, Object args) throws ScriptException, PoolException, InterruptedException;
-    public String actionReturnString(String action, Object args) throws ScriptException, PoolException, InterruptedException, JsonProcessingException;
+    public Object action(String action, Object args, Map<String, Object> mapReq) throws ScriptException, PoolException, InterruptedException;
+    public String actionReturnString(String action, Object args, Map<String, Object> mapReq) throws ScriptException, PoolException, InterruptedException, JsonProcessingException;
 
     public void addClasspath(String path) throws MalformedURLException;
     public void shutdown();

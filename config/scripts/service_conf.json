@@ -1,20 +1,26 @@
 {
-    "allow": null,
-    "deny": null,
-    "path": "services",
-    "map": {
-      "db": "mybatis"
+  "allow": null,
+  "deny": null,
+  "path": "services",
+  "map": {
+    "db": "mybatis",
+    "auth": "django_auth"
+  },
+  "preload": ["metrics"],
+  "initArguments": {
+    "jwt": {
+      "secret": "cNWp3Q7fnvY7E&&=M8h&sm$NRH$GFzQJ",
+      "issuer": "solutionx",
+      "expiration": 30
     },
-    "preload": ["metrics"],
-    "initArguments": {
-        "metrics": {
-          "db_service": "db",
-          "db_name": null,
-          "table_name": "metrics_stats",
-          "create_table": true
-        },
-        "db": {
-            "default": "default"
-        }
+    "metrics": {
+      "db_service": "db",
+      "db_name": null,
+      "table_name": "metrics_stats",
+      "create_table": true
+    },
+    "db": {
+      "default": "default"
     }
+  }
 }

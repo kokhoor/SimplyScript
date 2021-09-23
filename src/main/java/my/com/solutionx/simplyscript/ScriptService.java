@@ -212,19 +212,27 @@ public class ScriptService {
     }
 
     public Object action(String action) throws ScriptException, PoolException, InterruptedException {
-        return engine.action(action, null);
-    }
-    
-    public String actionReturnString(String action) throws ScriptException, PoolException, InterruptedException, JsonProcessingException {
-        return engine.actionReturnString(action, null);        
+        return action(action, null);
     }
 
     public Object action(String action, Object args) throws ScriptException, PoolException, InterruptedException {
-        return engine.action(action, args);        
+        return action(action, args, null);
+    }
+
+    public Object action(String action, Object args, Map<String, Object> mapReq) throws ScriptException, PoolException, InterruptedException {
+        return engine.action(action, args, mapReq);
+    }
+
+    public String actionReturnString(String action) throws ScriptException, PoolException, InterruptedException, JsonProcessingException {
+        return actionReturnString(action, null, null);        
     }
 
     public String actionReturnString(String action, Object args) throws ScriptException, PoolException, InterruptedException, JsonProcessingException {
-        return engine.actionReturnString(action, args);        
+        return actionReturnString(action, args, null);        
+    }
+
+    public String actionReturnString(String action, Object args, Map<String, Object> mapReq) throws ScriptException, PoolException, InterruptedException, JsonProcessingException {
+        return engine.actionReturnString(action, args, mapReq);
     }
 
     public void addClasspath(String strFile) throws MalformedURLException {

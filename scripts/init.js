@@ -45,6 +45,41 @@ var console = {
   }
 };
 
+function raiseError(message, code, action) {
+  var e = new Error(message);
+  e.code = code;
+  e.action = action;
+  throw e;
+};
+
+function check_required(args, fields, ctx) {
+  var error = "";
+  fields.forEach((field) => {
+    if (!(field in args)) {
+      if (error.length > 0)
+        error += ","
+      error += field;
+    }
+  });
+  if (error.length > 0) {
+    raiseError(`Required field(s) ${error} not provided.`, "E_MISSINGARGS", ctx.getLoggerName());
+  }
+}
+
+function check_empty(args, fields, ctx) {
+  var error = "";
+  fields.forEach((field) => {
+    if (args[field] == null || args[field] == '') {
+      if (error.length > 0)
+        error += ","
+      error += field;
+    }
+  });
+  if (error.length > 0) {
+    raiseError(`Required field(s) ${error} not provided or empty.`, "E_MISSINGARGSOREMPTY", ctx.getLoggerName());
+  }
+}
+
 String.prototype.delimit_quotes = function () {
   return this.replace(/'/g, "''");
 };

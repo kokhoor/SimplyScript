@@ -15,6 +15,7 @@
  */
 package my.com.solutionx.simplyscript;
 
+import java.util.Map;
 import javax.script.ScriptException;
 
 /**
@@ -24,13 +25,20 @@ import javax.script.ScriptException;
 public interface ScriptContextInterface {
 
     public void init() throws ScriptException;
-
+    public void setRequest(Map<String, Object> mapReq);
     public void recycle();
-
-    public void cleanup();
+    public void cleanup();    
 
     public Object service(String service, Object ctx) throws ScriptException;
-
     public Object module(String service, Object ctx);
-    
+
+    public Object app(String key);
+    public Object app(String key, Object value);
+    public Object cache(String key);
+    public void cache(String key, Object value);
+    // public Object system(String key);
+    // public Object system(String key, Object value);
+    public Object req(String key);
+    public Object req(String key, Object value);
+
 }

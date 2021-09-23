@@ -35,6 +35,9 @@ import my.com.solutionx.simplyscript.ScriptService;
 import org.openjdk.nashorn.api.scripting.NashornScriptEngine;
 import org.openjdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
+import org.openjdk.nashorn.internal.objects.NativeError;
+import org.openjdk.nashorn.internal.runtime.ECMAException;
+import org.openjdk.nashorn.internal.runtime.Undefined;
 import stormpot.PoolException;
 import stormpot.Timeout;
 
@@ -218,12 +221,19 @@ public class ScriptEngine implements ScriptEngineInterface {
         scriptService.get().module(key, value);
     }
 
-    public Object action(String action, Object args) throws ScriptException, PoolException, InterruptedException {
+    public Map<String, Object> action(String action, Object args, Map<String, Object> mapReq) throws ScriptException, PoolException, InterruptedException {
         Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
         PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
+        scriptContext.getScriptContext().setRequest(mapReq);
+
         try {
             ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.newObject(scriptContext.getScriptContext());
-            return ctx.callMember("call", action, args);
+            Object ret = ctx.callMember("call", action, args);
+            Map<String, Object> map = (Map<String, Object>) scriptContext.getScriptContext().req(OTHER_RETURN_DATA);
+            if (map == null)
+                map = new HashMap<>();
+            map.put("data", ret);
+            return map;
         } finally {
             if (scriptContext != null) {
               scriptContext.release();
@@ -231,28 +241,45 @@ public class ScriptEngine implements ScriptEngineInterface {
         }
     }
 
-    public String actionReturnString(String action, Object args) throws ScriptException, PoolException, InterruptedException, JsonProcessingException {
+    @Override
+    public String actionReturnString(String action, Object args, Map<String, Object> mapReq) throws ScriptException, PoolException, InterruptedException, JsonProcessingException {
         try {
             // ScriptObjectMirror ctxConstructor = (ScriptObjectMirror)scriptContext.getScriptContext().ctxConstructor();
-            Object ret = action(action, args);
+            Map<String, Object> ret = action(action, args, mapReq);
             ObjectMapper mapper = new ObjectMapper();
             SimpleModule module = new SimpleModule();
             module.addSerializer(new ScriptObjectMirrorSerializer(ScriptObjectMirror.class));
             // module.addSerializer(ScriptObjectMirror.class, new ScriptObjectMirrorSerializer());
             mapper.registerModule(module);
 
+            ret.put("success", true);
+            return mapper.writeValueAsString(ret);
+        } catch (ECMAException e) {
+            String out = e.getMessage();
+
             Map<String, Object> map = new HashMap<>();
-            map.put("success", true);
-            map.put("data", ret);
+            map.put("success", false);
+            map.put("message", out);
+
+            if (e.thrown != null && e.thrown instanceof NativeError) {
+                NativeError ne = (NativeError)e.thrown;
+                Object code = ne.get("code");
+                if (code != null && code != Undefined.getUndefined())
+                    map.put("code", code.toString());
+                Object actionIn = ne.get("action");
+                if (actionIn != null && actionIn != Undefined.getUndefined())
+                    map.put("action", actionIn.toString());
+            }
+            ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(map);
         } catch (Exception e) {
-            String out = String.format("%s:%s:%s%n", "Error calling action",
-                    e.getMessage(), e.getClass().getName());
+            String out = e.getMessage(); // String.format("%s:%s:%s%n", "Error calling action",
+                    // e.getMessage(), e.getClass().getName());
             ObjectMapper mapper = new ObjectMapper();
             Map<String, Object> map = new HashMap<>();
             map.put("success", false);
             map.put("message", out);
-            return mapper.writeValueAsString(out);
+            return mapper.writeValueAsString(map);
         }
     }
 

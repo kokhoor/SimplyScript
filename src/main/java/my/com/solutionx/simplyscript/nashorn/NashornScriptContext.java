@@ -32,6 +32,7 @@ import org.openjdk.nashorn.internal.runtime.Undefined;
 public class NashornScriptContext extends SimpleScriptContext implements ScriptContextInterface {
     WeakReference<ScriptEngine> global;
     Map<String, Object> request = new HashMap<>();
+    Map<String, Object> externalReq = new HashMap<>();
 
     public NashornScriptContext(ScriptEngine global) {
         super();
@@ -91,10 +92,14 @@ public class NashornScriptContext extends SimpleScriptContext implements ScriptC
     }
 
     public Object req(String key) {
+        if (externalReq != null)
+            return externalReq.get(key);
         return request.get(key);
     }
 
     public Object req(String key, Object value) {
+        if (externalReq != null)
+            return externalReq.put(key, value);
         return request.put(key, value);
     }
 
@@ -104,12 +109,19 @@ public class NashornScriptContext extends SimpleScriptContext implements ScriptC
 
     public void recycle() {
         request.clear();
+        externalReq = null;
     }
 
     public void cleanup() {
         request.clear();
         request = null;
+        externalReq = null;
         global.clear();
         global = null;
+    }
+
+    @Override
+    public void setRequest(Map<String, Object> mapReq) {
+        externalReq = mapReq;
     }
 }

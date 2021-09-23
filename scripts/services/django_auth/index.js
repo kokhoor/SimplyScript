@@ -14,63 +14,65 @@
  * limitations under the License.
  */
 
+/* global log, Java */
+
 (function() {
   
-function metrics() {
+function django_auth() {
 }
 
-metrics.prototype = {
+django_auth.prototype = {
   _init() {
   },
   _setup(serviceName, args, system, path, ctx) {
     this._loggername = "services." + serviceName;
+    log.info(this, "Service Name: {}, my path is: {}, args: {}", serviceName, path, args);
+
     var db_service = args.db_service || "db";
     this.db = ctx.service(db_service);
 
     this.db_name = args.db_name || null;
     var dbFactory = this.db.getFactory(this.db_name);
     var conf = dbFactory.getConfiguration();
-    // console.log("Database id: " + conf.	getDatabaseId());
-    var filepath = path + "mapper/metrics.xml";
+    var filepath = path + "mapper/auth.xml";
     var reader = new (Java.type("java.io.FileReader"))(filepath);
     var builder = new (Java.type("org.apache.ibatis.builder.xml.XMLMapperBuilder"))(reader, conf, filepath, conf.getSqlFragments());
     builder.parse();
 
-    this.table_name = args.table_name || "metrics_stats";
-    var create_table = args.create_table || true;
-    if (create_table) {
-      this.db.update(this.db_name, "metrics.createMetricsTable", {
-          "table_name": this.table_name
-        }, ctx);
-      this.db.postCall(ctx);
-    }
+    ctx.localContext.addClasspath(path + 'dependency/');
+    ctx.localContext.addClasspath(path + 'dependency/*.jar');
+    this.encoder_decoder = Java.type('my.com.solutionx.simplyscript_module.django_auth.PasswordEncoderDecoder');
 
     return {
-      contextPrototype: this,
-      preCall: {fn: this.preCall, priority: 9000 },
-      postCall: {fn: this.postCall, priority: 9000 }
+      contextPrototype: this
     };
   },
   getLoggerName() {
     return this._loggername;
   },
-  preCall(ctx, e) {
-    ctx.start_time = (new Date()).getTime();
+  setPassword(username, password, ctx) {
+    var hashed_password = this.encoder_decoder.encode(password);
+    return this.db.update(this.db_name, "auth.updatePassword", {
+      "username": username,
+      "password": password
+    }, ctx);    
   },
-  postCall(ctx, e) {
-    var end_time = (new Date()).getTime();
-    var time_taken_ms = end_time - ctx.start_time;
-    console.log("Start time: " + ctx.start_time + " End time: " + end_time + " Time taken: " + time_taken_ms);
-    var db = this.db.newDb(this.db_name, ctx);
-    db.update('metrics.updateMetrics', {
-      table_name: this.table_name,
-      name: ctx.getLoggerName(),
-      time_taken_ms: time_taken_ms
-    });
-    db.commit();
+  verifyUserPassword(username, password, ctx) {
+    var user_record = this.db.selectOne(this.db_name, "auth.getUserInfo", {
+      "username": username
+    }, ctx);
+    if (user_record == null)
+      raiseError("User not found", "E_USERNOTFOUND", this.getLoggerName() + ".verifyPassword");
+    if (!this.encoder_decoder.verifyPassword(password, user_record.password)) {
+      raiseError("Invalid User Id or Password", "E_USERNAMEPASSWORDINCORRECT",
+      this.getLoggerName() + ".verifyPassword");
+    }
+    user_record.remove("password");
+    return user_record;
   }
 };
-var service = new metrics();
+
+var service = new django_auth();
 service._init();
 return service;
 
