@@ -49,6 +49,17 @@ public class ValueSerializer extends StdSerializer<Value> {
                 jg.writeObject(t.getMember(key));
             }
             jg.writeEndObject();
+        } else if (t.isNumber()) {
+            if (t.fitsInLong())
+                jg.writeNumber(t.asLong());
+            else if (t.fitsInFloat())
+                jg.writeNumber(t.asFloat());
+            else
+                jg.writeNumber(t.asDouble());
+        } else if (t.isBoolean()) {
+            jg.writeBoolean(t.asBoolean());
+        } else if (t.isNull()) {
+            jg.writeNull();
         } else {
             jg.writeString(t.asString());
         }

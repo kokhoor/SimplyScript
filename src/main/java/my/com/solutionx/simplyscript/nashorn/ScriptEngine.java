@@ -232,7 +232,8 @@ public class ScriptEngine implements ScriptEngineInterface {
             Map<String, Object> map = (Map<String, Object>) scriptContext.getScriptContext().req(OTHER_RETURN_DATA);
             if (map == null)
                 map = new HashMap<>();
-            map.put("data", ret);
+            if (ret != null && ret.getClass() != Undefined.class)
+                map.put("data", ret);
             return map;
         } finally {
             if (scriptContext != null) {
@@ -244,12 +245,10 @@ public class ScriptEngine implements ScriptEngineInterface {
     @Override
     public String actionReturnString(String action, Object args, Map<String, Object> mapReq) throws ScriptException, PoolException, InterruptedException, JsonProcessingException {
         try {
-            // ScriptObjectMirror ctxConstructor = (ScriptObjectMirror)scriptContext.getScriptContext().ctxConstructor();
             Map<String, Object> ret = action(action, args, mapReq);
             ObjectMapper mapper = new ObjectMapper();
             SimpleModule module = new SimpleModule();
             module.addSerializer(new ScriptObjectMirrorSerializer(ScriptObjectMirror.class));
-            // module.addSerializer(ScriptObjectMirror.class, new ScriptObjectMirrorSerializer());
             mapper.registerModule(module);
 
             ret.put("success", true);

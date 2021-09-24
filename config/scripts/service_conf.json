@@ -6,7 +6,7 @@
     "db": "mybatis",
     "auth": "django_auth"
   },
-  "preload": ["metrics"],
+  "preload": ["metrics", "jwt"],
   "initArguments": {
     "jwt": {
       "secret": "cNWp3Q7fnvY7E&&=M8h&sm$NRH$GFzQJ",

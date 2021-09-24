@@ -40,7 +40,7 @@ public interface ScriptEngineInterface {
     public void loadModules(List<String> modules) throws ScriptException, PoolException, InterruptedException;
     public Object getModule(String name)  throws ScriptException, PoolException, InterruptedException;
     
-    public Object action(String action, Object args, Map<String, Object> mapReq) throws ScriptException, PoolException, InterruptedException;
+    public Map<String, Object> action(String action, Object args, Map<String, Object> mapReq) throws ScriptException, PoolException, InterruptedException;
     public String actionReturnString(String action, Object args, Map<String, Object> mapReq) throws ScriptException, PoolException, InterruptedException, JsonProcessingException;
 
     public void addClasspath(String path) throws MalformedURLException;

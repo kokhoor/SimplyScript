@@ -36,8 +36,10 @@ import stormpot.PoolException;
 
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.HostAccess;
+import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
+import org.openjdk.nashorn.internal.runtime.Undefined;
 import stormpot.Timeout;
 
 /**
@@ -176,7 +178,7 @@ public class ScriptEngine implements ScriptEngineInterface {
     }
 
     @Override
-    public Object action(String action, Object args, Map<String,Object> mapReq) throws ScriptException, PoolException, InterruptedException {
+    public Map<String, Object> action(String action, Object args, Map<String,Object> mapReq) throws ScriptException, PoolException, InterruptedException {
         Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
         PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
         scriptContext.getScriptContext().setRequest(mapReq);
@@ -184,7 +186,13 @@ public class ScriptEngine implements ScriptEngineInterface {
         try {
             Value ctx = (Value)ctxConstructor.newInstance(scriptContext.getScriptContext());
             Value callable = ctx.getMember("call");
-            return callable.execute(action, args);
+            Value ret = callable.execute(action, args);
+            Map<String, Object> map = (Map<String, Object>) scriptContext.getScriptContext().req(OTHER_RETURN_DATA);
+            if (map == null)
+                map = new HashMap<>();
+            if (ret != null && !ret.isNull())
+                map.put("data", ret);
+            return map;
         } finally {
             if (scriptContext != null) {
               scriptContext.release();
@@ -195,16 +203,32 @@ public class ScriptEngine implements ScriptEngineInterface {
     @Override
     public String actionReturnString(String action, Object args, Map<String,Object> mapReq) throws ScriptException, PoolException, InterruptedException, JsonProcessingException {
         try {
-            Object ret = action(action, args, mapReq);
+            Map<String, Object> ret = action(action, args, mapReq);
 
             ObjectMapper mapper = new ObjectMapper();
             SimpleModule module = new SimpleModule();
             module.addSerializer(new ValueSerializer(Value.class));
             mapper.registerModule(module);
 
+            ret.put("success", true);
+            return mapper.writeValueAsString(ret);
+        } catch (PolyglotException e) {
+            String out = e.getMessage();
+
             Map<String, Object> map = new HashMap<>();
-            map.put("success", true);
-            map.put("data", ret);
+            map.put("success", false);
+            map.put("message", out);
+
+            Value errorObject = e.getGuestObject();
+            if (errorObject != null) {
+                Value code = errorObject.getMember("code");
+                if (code != null)
+                    map.put("code", code.asString());
+                Value actionIn = errorObject.getMember("action");
+                if (actionIn != null)
+                    map.put("action", actionIn.asString());
+            }
+            ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(map);
         } catch (Exception e) {
             String out = e.getMessage(); // String.format("%s:%s:%s%n", "Error calling action",

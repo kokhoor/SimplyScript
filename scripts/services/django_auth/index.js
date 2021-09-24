@@ -54,8 +54,8 @@ django_auth.prototype = {
     var hashed_password = this.encoder_decoder.encode(password);
     return this.db.update(this.db_name, "auth.updatePassword", {
       "username": username,
-      "password": password
-    }, ctx);    
+      "password": hashed_password
+    }, ctx);
   },
   verifyUserPassword(username, password, ctx) {
     var user_record = this.db.selectOne(this.db_name, "auth.getUserInfo", {

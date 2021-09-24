@@ -84,7 +84,7 @@ public class NashornScriptContext extends SimpleScriptContext implements ScriptC
             ScriptObjectMirror ctxObject = global.get().ctxConstructor();
             Object ret = ctxObject.callMember("serviceSetup", key, global.get().system(), ctx);
             if (ret == null || ret.getClass() == Undefined.class)
-                throw new RuntimeException("Service cannot be setup: " + key);
+                throw new RuntimeException("Error instantiating service: " + key);
             obj = (ScriptObjectMirror) ret;
             global.get().service(key, obj);
         }

@@ -25,7 +25,9 @@ public class UndertowTest {
     @Test
     public void testInit() throws Exception {
         UndertowServer undertow = new UndertowServer();
-        Thread.sleep(60000);
+        // Thread.sleep(60000 * 5);
+        System.out.println("Press \"ENTER\" to exit...");
+        System.in.read();
         undertow.server.stop();
     }
 }
