@@ -47,18 +47,21 @@ import stormpot.Timeout;
  */
 public class ScriptEngine implements ScriptEngineInterface {
     CompiledScript initScript = null;
-    ScriptObjectMirror ctxConstructor = null;
+    ScriptObjectMirror ctxObject = null;
+    ScriptObjectMirror ctxConstructor;
     NashornScriptEngine engine = null;
     WeakReference<ScriptService> scriptService = null;
     String scripts_path = null;
     String config_path = null;
+    String working_path = null;
 
     @Override
     public void init(ScriptService scriptService, Map<String, Object> mapScriptConfig) throws ScriptException {
         this.scriptService = new WeakReference<>(scriptService);
         Map<String, String> config = (Map<String, String>) mapScriptConfig.get("config");
-        scripts_path = config.getOrDefault("scripts_path", "./scripts/");
-        config_path = config.getOrDefault("config_path", "./config/");
+        scripts_path = config.get("scripts_path");
+        config_path = config.get("config_path");
+        working_path = config.get("working_path");
 
         NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
         this.engine = (NashornScriptEngine) factory.getScriptEngine(new String[] { "--optimistic-types=false", "--language=es6" },
@@ -68,10 +71,11 @@ public class ScriptEngine implements ScriptEngineInterface {
         initScript = (CompiledScript)engine.compile("load('" + scripts_path + "init.js')");
         initScript.eval(currentCtx);
 
-        ScriptObjectMirror fnCtxFactory = (ScriptObjectMirror)engine.eval("load('" + scripts_path + "system/setup_env.js')", currentCtx);
+        ScriptObjectMirror fnCtxFactory = (ScriptObjectMirror)engine.eval("load('" + scripts_path + "system/ctx_prototype.js')", currentCtx);
         ScriptObjectMirror ctxFactoryRet = (ScriptObjectMirror)fnCtxFactory.call(fnCtxFactory);
-        ctxConstructor = (ScriptObjectMirror)ctxFactoryRet;
-        ctxConstructor.callMember("config", mapScriptConfig);
+        ctxObject = (ScriptObjectMirror) ctxFactoryRet.getSlot(0);
+        ctxConstructor = (ScriptObjectMirror) ctxFactoryRet.getSlot(1);
+        ctxObject.callMember("config", mapScriptConfig);
     }
 
     CompiledScript initScript() {
@@ -79,7 +83,7 @@ public class ScriptEngine implements ScriptEngineInterface {
     }
 
     ScriptObjectMirror ctxConstructor() {
-        return ctxConstructor;
+        return ctxObject;
     }
 
     @Override
@@ -87,6 +91,7 @@ public class ScriptEngine implements ScriptEngineInterface {
         NashornScriptContext scriptContext = new NashornScriptContext(this);
         scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).put("scripts_path", scripts_path);
         scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).put("config_path", config_path);
+        scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).put("working_path", working_path);
         return scriptContext;
     }
 
@@ -102,8 +107,9 @@ public class ScriptEngine implements ScriptEngineInterface {
         Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
         PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
         try {
-            // ScriptObjectMirror ctxConstructor = (ScriptObjectMirror) ((NashornScriptContext)scriptContext.getScriptContext()).ctxConstructor();
-            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.newObject(scriptContext.getScriptContext());
+            // ScriptObjectMirror ctxObject = (ScriptObjectMirror) ((NashornScriptContext)scriptContext.getScriptContext()).ctxObject();
+            // ScriptObjectMirror ctx = (ScriptObjectMirror)ctxObject.newObject(scriptContext.getScriptContext());
+            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.call(null, scriptContext.getScriptContext());
             services.forEach(name -> {
                 ctx.callMember("service", name);
             });
@@ -118,8 +124,9 @@ public class ScriptEngine implements ScriptEngineInterface {
         Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
         PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
         try {
-            // ScriptObjectMirror ctxConstructor = (ScriptObjectMirror) ((NashornScriptContext)scriptContext.getScriptContext()).ctxConstructor();
-            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.newObject(scriptContext.getScriptContext());
+            // ScriptObjectMirror ctxObject = (ScriptObjectMirror) ((NashornScriptContext)scriptContext.getScriptContext()).ctxObject();
+            //ScriptObjectMirror ctx = (ScriptObjectMirror)ctxObject.newObject(scriptContext.getScriptContext());
+            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.call(null, scriptContext.getScriptContext());
             return ctx.callMember("service", name);
         } finally {
             if (scriptContext != null) {
@@ -135,8 +142,9 @@ public class ScriptEngine implements ScriptEngineInterface {
         Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
         PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
         try {
-            // ScriptObjectMirror ctxConstructor = (ScriptObjectMirror) ((NashornScriptContext)scriptContext.getScriptContext()).ctxConstructor();
-            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.newObject(scriptContext.getScriptContext());
+            // ScriptObjectMirror ctxObject = (ScriptObjectMirror) ((NashornScriptContext)scriptContext.getScriptContext()).ctxObject();
+            //ScriptObjectMirror ctx = (ScriptObjectMirror)ctxObject.newObject(scriptContext.getScriptContext());
+            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.call(null, scriptContext.getScriptContext());
             modules.forEach(name -> {
                 ctx.callMember("module", name);
             });
@@ -151,8 +159,9 @@ public class ScriptEngine implements ScriptEngineInterface {
         Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
         PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
         try {
-            // ScriptObjectMirror ctxConstructor = (ScriptObjectMirror) ((NashornScriptContext)scriptContext.getScriptContext()).ctxConstructor();
-            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.newObject(scriptContext.getScriptContext());
+            // ScriptObjectMirror ctxObject = (ScriptObjectMirror) ((NashornScriptContext)scriptContext.getScriptContext()).ctxObject();
+            // ScriptObjectMirror ctx = (ScriptObjectMirror)ctxObject.newObject(scriptContext.getScriptContext());
+            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.call(null, scriptContext.getScriptContext());
             return ctx.callMember("module", name);
         } finally {
             if (scriptContext != null) {
@@ -227,7 +236,8 @@ public class ScriptEngine implements ScriptEngineInterface {
         scriptContext.getScriptContext().setRequest(mapReq);
 
         try {
-            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.newObject(scriptContext.getScriptContext());
+            // ScriptObjectMirror ctx = (ScriptObjectMirror)ctxObject.newObject(scriptContext.getScriptContext());
+            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.call(null, scriptContext.getScriptContext());
             Object ret = ctx.callMember("call", action, args);
             Map<String, Object> map = (Map<String, Object>) scriptContext.getScriptContext().req(OTHER_RETURN_DATA);
             if (map == null)
@@ -292,8 +302,8 @@ public class ScriptEngine implements ScriptEngineInterface {
         if (scriptService != null)
             scriptService.clear();
         scriptService = null;
-        if (ctxConstructor != null)
-            ctxConstructor.clear();
+        if (ctxObject != null)
+            ctxObject.clear();
         initScript = null;
         engine = null;
     }

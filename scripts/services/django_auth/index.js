@@ -39,8 +39,8 @@ django_auth.prototype = {
     var builder = new (Java.type("org.apache.ibatis.builder.xml.XMLMapperBuilder"))(reader, conf, filepath, conf.getSqlFragments());
     builder.parse();
 
-    ctx.localContext.addClasspath(path + 'dependency/');
-    ctx.localContext.addClasspath(path + 'dependency/*.jar');
+    ctx.addClasspath(path + 'dependency/');
+    ctx.addClasspath(path + 'dependency/*.jar');
     this.encoder_decoder = Java.type('my.com.solutionx.simplyscript_module.django_auth.PasswordEncoderDecoder');
 
     return {
@@ -72,8 +72,6 @@ django_auth.prototype = {
   }
 };
 
-var service = new django_auth();
-service._init();
-return service;
+return django_auth;
 
 }());

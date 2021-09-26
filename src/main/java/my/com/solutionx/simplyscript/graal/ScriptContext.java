@@ -18,9 +18,12 @@ package my.com.solutionx.simplyscript.graal;
 import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import javax.script.ScriptException;
 import my.com.solutionx.simplyscript.ScriptContextInterface;
+import my.com.solutionx.simplyscript.ScriptService;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Value;
@@ -50,9 +53,11 @@ public class ScriptContext implements ScriptContextInterface{
         ctx.eval(this.global.get().initScript);
     }
 
+    /*
     public Value ctxConstructor() {
-        return global.get().ctxConstructor();
+        return global.get().ctxObject();
     }
+    */
 
     public Object app(String key) {
         return global.get().app(key);
@@ -80,18 +85,37 @@ public class ScriptContext implements ScriptContextInterface{
 
     public Object module(String key, Object ctx) {
         return global.get().modules().get(key, (String k) -> {
-            Value ctxObject = global.get().ctxConstructor();
+            Value ctxObject = global.get().ctxObject();
             Value setupScript = ctxObject.getMember("moduleSetup");
             return setupScript.execute(key, global.get().system(), ctx);
         });
     }
 
+    public boolean isPrivileged(String uniqueid) {
+        ScriptService scriptService = global.get().scriptService.get();
+        return scriptService.isPrivilegedService(uniqueid);
+    }
+
     public Object service(String key, Object ctx) throws ScriptException {
         Value obj = (Value)global.get().service(key);
         if (obj == null) {
-            Value ctxObject = global.get().ctxConstructor();
+            Value ctxObject = global.get().ctxObject();
             Value setupScript = ctxObject.getMember("serviceSetup");
-            Object ret = setupScript.execute(key, global.get().system(), ctx);
+            String uuid = UUID.randomUUID().toString();
+            ScriptService scriptService = global.get().scriptService.get();
+            Map<String, Object> mapScriptConfig = scriptService.getScriptConfig();
+            Map<String, Object> mapServiceConfig = (Map<String, Object>) mapScriptConfig.get("service");
+            List lstPrivileged = (List)mapServiceConfig.get("privilegedServices");
+            if (lstPrivileged != null && lstPrivileged.contains(key)) {
+                scriptService.addPrivilegedService(uuid);
+            }
+/*
+            if (v != null && !v.isNull()) {
+                for (long i=0; i<v.getArraySize(); i++) {
+                }
+            }
+*/
+            Object ret = setupScript.execute(key, global.get().system(), uuid, ctx);
             if (ret == null) //  || ret.getClass() == Undefined.class)
                 throw new RuntimeException("Service cannot be setup: " + key);
             obj = (Value) ret;

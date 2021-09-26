@@ -1,8 +1,8 @@
 {
-    "allow": null,
-    "deny": null,
-    "path": "modules",
-    "map": {
-      "CallTest": "CallTestOriginal"
-    }
+  "allow": null,
+  "deny": null,
+  "path": "modules",
+  "map": {
+    "CallTest": "CallTestOriginal"
+  }
 }

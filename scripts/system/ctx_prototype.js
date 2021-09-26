@@ -2,10 +2,17 @@ load(scripts_path + 'system/priority_list.js');
 console.log(PriorityList);
 (function() {
 
-function ctxObject(localContext) {
-  this.localContext = localContext;
+function ctxObject(argLocalContext) {
+  localContext = argLocalContext;
   this.callDepth = -1;
   this.callStack = [];
+  user = {
+    "username": "anonymous",
+    "is_active": false,
+    "is_staff": false,
+    "is_superuser": false,
+    "is_anonymous": true
+  };
 }
 
 ctxObject.prototype = {
@@ -14,25 +21,37 @@ ctxObject.prototype = {
       return "context";
     return "modules." + this.callStack[this.callStack.length-1];
   },
+  getUser() {
+    return user;
+  },
+  setUser(argUser, uniqueid) {
+    if (localContext.isPrivileged(uniqueid))
+      user = argUser;
+    else
+      raiseError("Caller does not have privilege to set context User", "E_NOPRIVILEGE_SETUSER");
+  },
+  addClasspath(path) {
+    localContext.addClasspath(path);
+  },
   app(key, value) {
     if (arguments.length > 1) { // is set
-      this.localContext.app(key, value);
+      localContext.app(key, value);
     } else { // is get
-      return  this.localContext.app(key);
+      return  localContext.app(key);
     }
   },
   cache(key, value) {
     if (arguments.length > 1) { // is set
-      this.localContext.cache(key, value);
+      localContext.cache(key, value);
     } else { // is get
-      return  this.localContext.cache(key);
+      return  localContext.cache(key);
     }
   },
   req(key, value) {
     if (arguments.length > 1) { // is set
-      this.localContext.req(key, value);
+      localContext.req(key, value);
     } else { // is get
-      return  this.localContext.req(key);
+      return  localContext.req(key);
     }
   },
   setReturn(key, value) {
@@ -52,7 +71,7 @@ ctxObject.prototype = {
     this.callDepth += 1;
     this.callStack.push(action);
     try {
-      var preCall = this.callDepth <= 0 ? this.localContext.system("preCall") : this.localContext.system("preInnerCall");
+      var preCall = this.callDepth <= 0 ? localContext.system("preCall") : localContext.system("preInnerCall");
       if (preCall !== null) {
         for (var i=0; i<preCall.items.length; i++) {
           try {
@@ -66,13 +85,13 @@ ctxObject.prototype = {
       var module = action.substring(0, idx);
       var method = action.substring(idx+1);
 
-      var objModule = this.localContext.module(module, this);
+      var objModule = localContext.module(module, this);
       if (objModule == null)
         throw new Error("Module not found: " + module);
 
       var ret = objModule[method](args, this);
 
-      var postCall = this.callDepth <= 0 ? this.localContext.system("postCall") : this.localContext.system("postInnerCall");
+      var postCall = this.callDepth <= 0 ? localContext.system("postCall") : localContext.system("postInnerCall");
       if (postCall !== null) {
         for (var i=0; i<postCall.items.length; i++) {
           try {
@@ -85,7 +104,7 @@ ctxObject.prototype = {
 
       return ret;
     } catch (e) {
-      var postCall = this.callDepth <= 0 ? this.localContext.system("postCall") : this.localContext.system("postInnerCall");
+      var postCall = this.callDepth <= 0 ? localContext.system("postCall") : localContext.system("postInnerCall");
       if (postCall !== null) {
         for (var i=0; i<postCall.items.length; i++) {
           try {
@@ -102,14 +121,14 @@ ctxObject.prototype = {
     }
   },
   service(name) {
-    return this.localContext.service(name, this);
+    return localContext.service(name, this);
   },
   module(name) {
-    return this.localContext.module(module, this);
+    return localContext.module(module, this);
   }
 };
 
-ctxObject.serviceSetup = function(serviceName, system, ctx) {
+ctxObject.serviceSetup = function(serviceName, system, uniqueid, ctx) {
   if (this._config.service.deny != null) {
     if (serviceName in this._config.service.deny) {
       return null;
@@ -131,9 +150,16 @@ ctxObject.serviceSetup = function(serviceName, system, ctx) {
 
   var setupData = null;
   var path = `${this._config.service.path}/${scriptName}/`;
-  var service = load(path + 'index.js');
+  var serviceConstructor = load(path + 'index.js');
+  if (serviceConstructor == null)
+    return null;
+
+  var service = new serviceConstructor(uniqueid);
   if (service == null)
     return null;
+
+  if ("_init" in service)
+    service._init();
 
   if ("_setup" in service) {
     var args = this._config.service.initArguments[serviceName] || {};
@@ -230,6 +256,10 @@ ctxObject.config = function (objs) {
   config_by_type("module", objs['module']);
 };
 
-return ctxObject;
+function newContext(localContext) {
+  var o = new ctxObject(localContext);
+  return Object.freeze(o);
+}
+return [ctxObject, newContext];
 
 });

@@ -18,7 +18,8 @@
 
 (function() {
   
-function jwt() {
+function jwt(argUniqueid) {
+  uniqueid = argUniqueid;
 }
 
 jwt.prototype = {
@@ -27,8 +28,8 @@ jwt.prototype = {
   _setup(serviceName, args, system, path, ctx) {
     this._loggername = "services." + serviceName;
     log.info(this, "Service Name: {}, my path is: {}, args: {}", serviceName, path, args);
-    ctx.localContext.addClasspath(path + 'dependency/');
-    ctx.localContext.addClasspath(path + 'dependency/*.jar');
+    ctx.addClasspath(path + 'dependency/');
+    ctx.addClasspath(path + 'dependency/*.jar');
     var secret = args.secret;
     if (secret == null || secret == '')
       raiseError("JWT key is not defined", "E_JWTINVALIDKEY", this._loggername + "._setup");
@@ -81,15 +82,17 @@ jwt.prototype = {
       var is_staff = claim.getClaimValue("is_staff");
       var is_superuser = claim.getClaimValue("is_superuser");
       var dt = new (Java.type("java.util.Date"))(claim.getExpirationTime().getValueInMillis());
-      ctx.req("user", {
+      var userObject = {
         "username": username,
-        "active": is_active,
-        "staff": is_staff,
-        "superuser": is_superuser,
+        "is_active": is_active,
+        "is_staff": is_staff,
+        "is_superuser": is_superuser,
+        "is_anonymous": false,
         "expiry": dt
-      });
+      };
+// console.log("Trying to set user: " + JSON.stringify(userObject));
+      ctx.setUser(userObject, uniqueid);
     } catch (e) {
-      throw e;
         console.log("Invalid JWT: " + e.message);
     }
   },
@@ -114,8 +117,6 @@ jwt.prototype = {
   }
 };
 
-var service = new jwt();
-service._init();
-return service;
+return jwt;
 
 }());

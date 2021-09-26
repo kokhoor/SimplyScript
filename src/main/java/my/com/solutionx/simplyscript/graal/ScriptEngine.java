@@ -39,7 +39,6 @@ import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
-import org.openjdk.nashorn.internal.runtime.Undefined;
 import stormpot.Timeout;
 
 /**
@@ -51,17 +50,20 @@ public class ScriptEngine implements ScriptEngineInterface {
     Engine engine = null;
     ScriptContext ctx = null;
     Source initScript = null;
+    private Value ctxObject;
     private Value ctxConstructor;
     HostAccess hostAccess = null;
     String scripts_path = null;
     String config_path = null;
+    String working_path = null;
 
     @Override
     public void init(ScriptService scriptService, Map<String, Object> mapScriptConfig) throws ScriptException, IOException {
         this.scriptService = new WeakReference<>(scriptService);
         Map<String, String> config = (Map<String, String>) mapScriptConfig.get("config");
-        scripts_path = config.getOrDefault("scripts_path", "./scripts/");
-        config_path = config.getOrDefault("config_path", "./config/");
+        scripts_path = config.get("scripts_path");
+        config_path = config.get("config_path");
+        working_path = config.get("working_path");
 
         initScript = Source.newBuilder("js", new File(scripts_path + "init.js")).build();
         engine = Engine.create();
@@ -93,11 +95,13 @@ public class ScriptEngine implements ScriptEngineInterface {
                 .allowIO(true).build();
         ctx.eval(initScript);
 */
-        Source setupEnvScript = Source.newBuilder("js", new File(scripts_path + "system/setup_env.js")).build();
+        Source setupEnvScript = Source.newBuilder("js", new File(scripts_path + "system/ctx_prototype.js")).build();
         Value value = ctx.ctx.eval(setupEnvScript);
-//        ctxConstructor = (ScriptObjectMirror)ctxFactoryRet;
-        ctxConstructor = value.execute();
-        ctxConstructor.getMember("config").execute(mapScriptConfig);
+//        ctxObject = (ScriptObjectMirror)ctxFactoryRet;
+        Value ctxProtoRet = value.execute();
+        ctxObject = ctxProtoRet.getArrayElement(0);
+        ctxConstructor = ctxProtoRet.getArrayElement(1);
+        ctxObject.getMember("config").execute(mapScriptConfig);
     }
 
     @Override
@@ -106,6 +110,7 @@ public class ScriptEngine implements ScriptEngineInterface {
         Value jsBindings = scriptContext.ctx.getBindings("js");
         jsBindings.putMember("scripts_path", scripts_path);
         jsBindings.putMember("config_path", config_path);
+        jsBindings.putMember("working_path", working_path);
         // scriptContext.ctx.eval("js", "var scripts_path='" + scripts_path + "'");
         return scriptContext;
     }
@@ -120,7 +125,8 @@ public class ScriptEngine implements ScriptEngineInterface {
         Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
         PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
         try {
-            Value ctx = (Value)ctxConstructor.newInstance(scriptContext.getScriptContext());
+            // Value ctx = (Value)ctxObject.newInstance(scriptContext.getScriptContext());
+            Value ctx = ctxConstructor.execute(scriptContext.getScriptContext());
             Value callable = ctx.getMember("service");
             return callable.execute(name);
         } finally {
@@ -135,7 +141,8 @@ public class ScriptEngine implements ScriptEngineInterface {
         Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
         PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
         try {
-            Value ctx = (Value)ctxConstructor.newInstance(scriptContext.getScriptContext());
+            // Value ctx = (Value)ctxObject.newInstance(scriptContext.getScriptContext());
+            Value ctx = ctxConstructor.execute(scriptContext.getScriptContext());
             Value callable = ctx.getMember("service");
             for (String name : services)
                 callable.execute(name);
@@ -151,7 +158,8 @@ public class ScriptEngine implements ScriptEngineInterface {
         Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
         PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
         try {
-            Value ctx = (Value)ctxConstructor.newInstance(scriptContext.getScriptContext());
+            // Value ctx = (Value)ctxObject.newInstance(scriptContext.getScriptContext());
+            Value ctx = ctxConstructor.execute(scriptContext.getScriptContext());
             Value callable = ctx.getMember("module");
             for (String name : modules)
                 callable.execute(name);
@@ -167,7 +175,8 @@ public class ScriptEngine implements ScriptEngineInterface {
         Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
         PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
         try {
-            Value ctx = (Value)ctxConstructor.newInstance(scriptContext.getScriptContext());
+            // Value ctx = (Value)ctxObject.newInstance(scriptContext.getScriptContext());
+            Value ctx = ctxConstructor.execute(scriptContext.getScriptContext());
             Value callable = ctx.getMember("module");
             return callable.execute(name);
         } finally {
@@ -184,7 +193,8 @@ public class ScriptEngine implements ScriptEngineInterface {
         scriptContext.getScriptContext().setRequest(mapReq);
 
         try {
-            Value ctx = (Value)ctxConstructor.newInstance(scriptContext.getScriptContext());
+            // Value ctx = (Value)ctxObject.newInstance(scriptContext.getScriptContext());
+            Value ctx = ctxConstructor.execute(scriptContext.getScriptContext());
             Value callable = ctx.getMember("call");
             Value ret = callable.execute(action, args);
             Map<String, Object> map = (Map<String, Object>) scriptContext.getScriptContext().req(OTHER_RETURN_DATA);
@@ -301,8 +311,8 @@ public class ScriptEngine implements ScriptEngineInterface {
         scriptService.get().module(key, value);
     }
 
-    Value ctxConstructor() {
-        return ctxConstructor;
+    Value ctxObject() {
+        return ctxObject;
     }
     
     public void addClasspath(String path)  throws MalformedURLException {
@@ -318,7 +328,7 @@ public class ScriptEngine implements ScriptEngineInterface {
             ctx.cleanup();
         ctx = null;
         initScript = null;
-        ctxConstructor = null;
+        ctxObject = null;
         hostAccess = null;
         if (engine != null)
             engine.close();

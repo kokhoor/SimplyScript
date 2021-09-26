@@ -26,8 +26,8 @@ mybatis.prototype = {
   _setup(serviceName, args, system, path, ctx) {
     this._loggername = "services." + serviceName;
     log.info(this, "Service Name: {}, my path is: {}, args: {}", serviceName, path, args);
-    ctx.localContext.addClasspath(path + 'dependency/');
-    ctx.localContext.addClasspath(path + 'dependency/*.jar');
+    ctx.addClasspath(path + 'dependency/');
+    ctx.addClasspath(path + 'dependency/*.jar');
     const FileReader = Java.type('java.io.FileReader');
     this.configReader = new FileReader("config/mybatis/environment.xml");
     this.properties = new (Java.type('java.util.Properties'))();
@@ -51,11 +51,11 @@ mybatis.prototype = {
     return this._loggername;
   },
   postInnerCall(ctx, e) {
-    if (ctx._dbConnNew == null)
+    if (ctx.req("_dbConnNew") == null)
       return;
 
-    for (var i=ctx._dbConnNew.length-1; i>=0; i--) {
-      var db = ctx._dbConnNew[i];
+    for (var i=ctx.req("_dbConnNew").length-1; i>=0; i--) {
+      var db = ctx.req("_dbConnNew")[i];
       if (db.depth < ctx.callDepth)
         break;
 
@@ -65,13 +65,13 @@ mybatis.prototype = {
         db.commit();
       db.close();
       print("postInnderCall Cleaning up DB_NEW db: " + db);
-      ctx._dbConnNew.pop();
+      ctx.req("_dbConnNew").pop();
     }
   },
   postCall(ctx, e) {
-    if (ctx._dbConnNew != null) {
-      for (var i=ctx._dbConnNew.length-1; i>=0; i--) {
-        var db = ctx._dbConnNew[i];
+    if (ctx.req("_dbConnNew") != null) {
+      for (var i=ctx.req("_dbConnNew").length-1; i>=0; i--) {
+        var db = ctx.req("_dbConnNew")[i];
         if (e != null)
           db.rollback();
         else
@@ -79,19 +79,19 @@ mybatis.prototype = {
         db.close();
         print("postCall Cleaning up DB_NEW db: " + db);
       }
-      ctx._dbConnNew[i] = null;
+      ctx.req("_dbConnNew")[i] = null;
     }
 
-    if (ctx._dbConn != null) {
-      for (var dbName in ctx._dbConn) {
-        var db = ctx._dbConn[dbName];
+    if (ctx.req("_dbConn") != null) {
+      for (var dbName in ctx.req("_dbConn")) {
+        var db = ctx.req("_dbConn")[dbName];
         if (e != null)
           db.rollback();
         else
           db.commit();
         db.close();
         print("postCall Cleaning up DB db: " + db);
-        delete ctx._dbConn[dbName];
+        delete ctx.req("_dbConn")[dbName];
       }
     }
   },
@@ -111,15 +111,15 @@ mybatis.prototype = {
     if (ctx == null)
       throw new Error("Context must be provided");
 
-    if (ctx._dbConn == null)
-      ctx._dbConn = {};
+    if (ctx.req("_dbConn") == null)
+      ctx.req("_dbConn", {});
  
     dbName = dbName || this.default_db;
-    if (ctx._dbConn[dbName])
-      return ctx._dbConn[dbName];
+    if (ctx.req("_dbConn")[dbName])
+      return ctx.req("_dbConn")[dbName];
 
     var factory = this.getFactory(dbName);
-    var db = ctx._dbConn[dbName] = factory.openSession();
+    var db = ctx.req("_dbConn")[dbName] = factory.openSession();
     return db;
   },
   newDb(dbName, ctx) {
@@ -129,14 +129,14 @@ mybatis.prototype = {
     if (ctx == null)
       throw new Error("Context must be provided");
 
-    if (ctx._dbConnNew == null)
-      ctx._dbConnNew = [];
+    if (ctx.req("_dbConnNew") == null)
+      ctx.req("_dbConnNew", []);
 
     dbName = dbName || this.default_db;
 
     var factory = this.getFactory(dbName);
     var db = factory.openSession();
-    ctx._dbConnNew.push(db);
+    ctx.req("_dbConnNew").push(db);
     return db;
   },
   selectOne(dbName, scriptName, parameters, ctx) {
@@ -164,8 +164,7 @@ mybatis.prototype = {
     return db.delete(scriptName, parameters);
   }
 };
-var service = new mybatis();
-service._init();
-return service;
+
+return mybatis;
 
 }());

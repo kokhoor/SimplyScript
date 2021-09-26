@@ -55,12 +55,13 @@ metrics.prototype = {
     return this._loggername;
   },
   preCall(ctx, e) {
-    ctx.start_time = (new Date()).getTime();
+    ctx.req("metrics_start_time", (new Date()).getTime());
   },
   postCall(ctx, e) {
+    var start_time = ctx.req("metrics_start_time");
     var end_time = (new Date()).getTime();
-    var time_taken_ms = end_time - ctx.start_time;
-    console.log("Start time: " + ctx.start_time + " End time: " + end_time + " Time taken: " + time_taken_ms);
+    var time_taken_ms = end_time - start_time;
+    console.log("Start time: " + start_time + " End time: " + end_time + " Time taken: " + time_taken_ms);
     var db = this.db.newDb(this.db_name, ctx);
     db.update('metrics.updateMetrics', {
       table_name: this.table_name,
@@ -70,8 +71,7 @@ metrics.prototype = {
     db.commit();
   }
 };
-var service = new metrics();
-service._init();
-return service;
+
+return metrics;
 
 }());

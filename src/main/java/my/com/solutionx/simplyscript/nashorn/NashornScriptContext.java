@@ -18,10 +18,13 @@ package my.com.solutionx.simplyscript.nashorn;
 import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 import my.com.solutionx.simplyscript.ScriptContextInterface;
+import my.com.solutionx.simplyscript.ScriptService;
 import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.openjdk.nashorn.internal.runtime.Undefined;
 
@@ -78,11 +81,25 @@ public class NashornScriptContext extends SimpleScriptContext implements ScriptC
         });
     }
 
+    public boolean isPrivileged(String uniqueid) {
+        ScriptService scriptService = global.get().scriptService.get();
+        return scriptService.isPrivilegedService(uniqueid);
+    }
+
     public Object service(String key, Object ctx) throws ScriptException {
         ScriptObjectMirror obj = (ScriptObjectMirror)global.get().service(key);
         if (obj == null) {
             ScriptObjectMirror ctxObject = global.get().ctxConstructor();
-            Object ret = ctxObject.callMember("serviceSetup", key, global.get().system(), ctx);
+            String uuid = UUID.randomUUID().toString();
+            ScriptService scriptService = global.get().scriptService.get();
+            Map<String, Object> mapScriptConfig = scriptService.getScriptConfig();
+            Map<String, Object> mapServiceConfig = (Map<String, Object>) mapScriptConfig.get("service");
+            List lstPrivileged = (List)mapServiceConfig.get("privilegedServices");
+            if (lstPrivileged != null && lstPrivileged.contains(key)) {
+                scriptService.addPrivilegedService(uuid);
+            }
+
+            Object ret = ctxObject.callMember("serviceSetup", key, global.get().system(), uuid, ctx);
             if (ret == null || ret.getClass() == Undefined.class)
                 throw new RuntimeException("Error instantiating service: " + key);
             obj = (ScriptObjectMirror) ret;

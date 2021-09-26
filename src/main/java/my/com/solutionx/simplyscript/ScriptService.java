@@ -28,8 +28,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.script.ScriptException;
 import stormpot.Pool;
@@ -55,20 +57,26 @@ public class ScriptService {
     Map<String, Object> system = new ConcurrentHashMap<>();
     Map<String, Object> services = new ConcurrentHashMap<>();
     SimplyScriptClassLoader loader = null;
-    Map<String, String> config = null;
+    Set<String> privilegedServices = new HashSet<>();
+
+    // Map<String, String> config = null;
+    private Map<String, Object> mapScriptConfig;
 
     public ScriptService() throws ScriptException {
         super();
     }
     
     public void init(Map<String, String> config) throws FileNotFoundException, IOException, ScriptException, PoolException, InterruptedException, ScriptServiceException, InvocationTargetException {
-        this.config = config;
+        // this.config = config;
         loader = new SimplyScriptClassLoader("SimplyScriptService", new URL[] {}, this.getClass().getClassLoader() );
         Thread.currentThread().setContextClassLoader(loader);
         String config_path = config.getOrDefault("config_path", "./config/");
         String working_path = config.getOrDefault("working_path", "./");
-        String scripts_path= config.getOrDefault("scripts_path", "./scripts/");
+        String scripts_path = config.getOrDefault("scripts_path", "./scripts/");
         String pool_size = config.getOrDefault("pool_size", "5");
+        config.put("config_path", config_path);
+        config.put("scripts_path", scripts_path);
+        config.put("working_path", working_path);
 
         String ScriptEngineClass = config.getOrDefault("engine", "my.com.solutionx.simplyscript.nashorn.ScriptEngine");
         System.out.println("Using ScriptEngineClass: " + ScriptEngineClass);
@@ -98,12 +106,13 @@ public class ScriptService {
                 Map.class);
         Map<String, Object> mapServiceConfig = mapper.readValue(new FileReader(config_path + "/scripts/service_conf.json"),
                 Map.class);
-        Map<String, Object> mapScriptConfig = new HashMap<>();
+        mapScriptConfig = new HashMap<>();
         mapModuleConfig.put("path", scripts_path + mapModuleConfig.getOrDefault("path", "modules"));
         mapServiceConfig.put("path", scripts_path + mapServiceConfig.getOrDefault("path", "services"));
         mapScriptConfig.put("module", mapModuleConfig);
         mapScriptConfig.put("service", mapServiceConfig);
         mapScriptConfig.put("config", config);
+        system.put("config", mapScriptConfig);
         engine.init(this, mapScriptConfig);
 
         PoolableScriptContextAllocator allocator = new PoolableScriptContextAllocator(engine);
@@ -301,6 +310,26 @@ public class ScriptService {
             services.clear();
         }
 
-        init(config);
+        init((Map<String, String>) mapScriptConfig.get("config"));
+    }
+
+    public Map<String, Object> getScriptConfig() {
+        return mapScriptConfig;
+    }
+    
+    public void addPrivilegedService(String uniqueid) {
+        privilegedServices.add(uniqueid);
+    }
+
+    public void removePrivilegedService(String uniqueid) {
+        privilegedServices.remove(uniqueid);
+    }
+
+    public void clearPrivilegedService() {
+        privilegedServices.clear();
+    }
+    
+    public boolean isPrivilegedService(String uniqueid) {
+        return privilegedServices.contains(uniqueid);
     }
 }

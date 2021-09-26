@@ -7,6 +7,7 @@
     "auth": "django_auth"
   },
   "preload": ["metrics", "jwt"],
+  "privilegedServices": ["jwt"],
   "initArguments": {
     "jwt": {
       "secret": "cNWp3Q7fnvY7E&&=M8h&sm$NRH$GFzQJ",
