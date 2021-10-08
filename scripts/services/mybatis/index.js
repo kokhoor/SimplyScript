@@ -29,9 +29,9 @@ mybatis.prototype = {
     ctx.addClasspath(path + 'dependency/');
     ctx.addClasspath(path + 'dependency/*.jar');
     const FileReader = Java.type('java.io.FileReader');
-    this.configReader = new FileReader("config/mybatis/environment.xml");
+    this.configReader = new FileReader(`${config_path}/mybatis/environment.xml`);
     this.properties = new (Java.type('java.util.Properties'))();
-    this.properties.load(new FileReader("config/mybatis/datasource.properties"));
+    this.properties.load(new FileReader(`${config_path}/mybatis/datasource.properties`));
     this.dbFactories = {};
     this.factoryBuilder = Java.type('org.apache.ibatis.session.SqlSessionFactoryBuilder');
     this.default_db = args['default'] || null;

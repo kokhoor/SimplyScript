@@ -30,6 +30,19 @@ ctxObject.prototype = {
     else
       raiseError("Caller does not have privilege to set context User", "E_NOPRIVILEGE_SETUSER");
   },
+  system(name) {
+    var user = this.getUser();
+    if (user == null || !user.is_superuser)
+        raiseError("Not Authorized", "E_NOTAUTHORIZED", this.getLoggerName());
+    return localContext.system(name);
+  },
+  module(name) {
+    var user = this.getUser();
+    if (user == null || !user.is_superuser)
+        raiseError("Not Authorized", "E_NOTAUTHORIZED", this.getLoggerName());
+    console.log("Trying to load module: " + name);
+    return localContext.module(name, this);
+  },
   addClasspath(path) {
     localContext.addClasspath(path);
   },
@@ -122,10 +135,12 @@ ctxObject.prototype = {
   },
   service(name) {
     return localContext.service(name, this);
-  },
+  }
+/*
   module(name) {
     return localContext.module(module, this);
   }
+*/
 };
 
 ctxObject.serviceSetup = function(serviceName, system, uniqueid, ctx) {
