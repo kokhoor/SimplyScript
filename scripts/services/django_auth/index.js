@@ -69,6 +69,17 @@ django_auth.prototype = {
     }
     user_record.remove("password");
     return user_record;
+  },
+  setInactiveActionPermission(ctx) {
+    return this.db.update(this.db_name, "auth.setInactiveActionPermission", null, ctx);
+  },
+  addActionPermission(name, ctx) {
+    return this.db.update(this.db_name, "auth.addActionPermission", {
+      name: name
+    }, ctx);
+  },
+  deleteInactiveActionPermission(ctx) {
+    return this.db.update(this.db_name, "auth.deleteInactiveActionPermission", null, ctx);
   }
 };
 

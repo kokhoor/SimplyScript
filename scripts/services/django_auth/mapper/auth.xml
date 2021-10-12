@@ -22,8 +22,8 @@
 
   <select id="getActionPermissions" parameterType="hashmap" resultType="ciMap" fetchSize="100">
     SELECT agp.group_id, p.name
-    FROM simplyscript_permission p
-      inner join simplyscript_grouppermission agp on agp.permission_id = p.id
+    FROM simplyscript_actionpermission p
+      inner join simplyscript_groupactionpermission agp on agp.permission_id = p.id
     WHERE agp.group_id in 
     <foreach item="group" index="index" collection="groups" open="(" separator="," close=")">
       #{group}
@@ -31,10 +31,29 @@
     ORDER BY 1,2
   </select>
 
+  <update id="setInactiveActionPermission" parameterType="hashmap">
+    UPDATE simplyscript_actionpermission SET active_ind=FALSE
+  </update>
+
+  <update id="addActionPermission" parameterType="hashmap">
+    INSERT INTO simplyscript_actionpermission AS t (id,name,active_ind)
+    VALUES (
+      nextval('simplyscript_actionpermission_id_seq'),
+      #{name},
+      TRUE
+    )
+    ON CONFLICT (name) DO UPDATE SET
+      active_ind=TRUE
+  </update>
+
+  <update id="deleteInactiveActionPermission" parameterType="hashmap">
+    DELETE FROM simplyscript_actionpermission WHERE active_ind IS NULL or active_ind=FALSE
+  </update>
+
   <update id="updatePassword" parameterType="hashmap">
-      UPDATE auth_user
-        SET password=#{password}
-      WHERE username ilike #{username}
+    UPDATE auth_user
+      SET password=#{password}
+    WHERE username ilike #{username}
   </update>
 
 </mapper>
