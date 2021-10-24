@@ -7,7 +7,7 @@
   <select id="getUserInfo" parameterType="hashmap" resultType="ciMap" fetchSize="1">
     SELECT username,password,is_superuser,is_active,is_staff
     FROM auth_user
-    WHERE username ilike #{username}
+    WHERE username ilike #{username};
   </select>
 
   <select id="getGroups" parameterType="hashmap" resultType="ciMap" fetchSize="100">

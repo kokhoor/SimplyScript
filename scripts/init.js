@@ -57,7 +57,7 @@ function check_required(args, fields, ctx) {
   fields.forEach((field) => {
     if (!(field in args)) {
       if (error.length > 0)
-        error += ","
+        error += ",";
       error += field;
     }
   });
@@ -71,7 +71,7 @@ function check_empty(args, fields, ctx) {
   fields.forEach((field) => {
     if (args[field] == null || args[field] == '') {
       if (error.length > 0)
-        error += ","
+        error += ",";
       error += field;
     }
   });
@@ -84,14 +84,16 @@ String.prototype.delimit_quotes = function () {
   return this.replace(/'/g, "''");
 };
 
-print("Load dayjs");
+//print("Load dayjs");
 load(scripts_path + 'lib/dayjs.min.js');
 load(scripts_path + 'lib/dayjs.customParseFormat.js');
 dayjs.extend(dayjs_plugin_customParseFormat);
+/*
 console.log(dayjs("12-25-1995", "MM-DD-YYYY").format("DD MMM YYYY HH:mm:ss"));
 print("Load numeral");
+ */
 load(scripts_path + 'lib/numeral.min.js');
-print("Loaded all libs");
+// print("Loaded all libs");
 
 function curry_pre(arrPre, fn) {
   return function () {
@@ -101,6 +103,7 @@ function curry_pre(arrPre, fn) {
   };
 }
 
+/*
 const global = {
     modules: {},
     math: load(scripts_path + 'lib/camel.js'),
@@ -125,3 +128,4 @@ print("Have math:");
 print(global.math);
 print("After have math");
 print(global.test.sum(1,2));
+*/

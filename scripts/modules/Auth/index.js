@@ -1,12 +1,19 @@
+/* global Java */
+
 ({
   login(args, ctx) {
     check_empty(args, ['username', 'password'], ctx);
     var user = ctx.service("auth").verifyUserPassword(args.username, args.password, ctx);
+    var groups = null;
     if (user != null) {
       var token = ctx.service("jwt").encode(user);
       ctx.setReturn("token", token);
+      groups = ctx.db.selectList(null, "auth.getGroups", null, ctx);
     }
-    return user;
+    return {
+      "user": user,
+      "groups": groups
+    };
   },
   changePassword(args, ctx) {
     var user = ctx.getUser();
@@ -63,11 +70,23 @@
     var scripts_path = module['path'];
     var java_io_Files = Java.type("java.io.File");
     var FileFilter = Java.type("java.io.FileFilter");
+/*
+    // For Nashorn
     var directoryFilter = new FileFilter() {
 			accept: function(file) {
 				return file.isDirectory();
 			}
 		};
+ */
+    // For graal
+    // var FileFilterAdapter = Java.extend(FileFilter);
+    // var directoryFilter = new FileFilter();
+    var directoryFilter = new (Java.extend(FileFilter, {
+			accept: function(file) {
+				return file.isDirectory();
+			}
+    }));
+
     ctx.service("auth").setInactiveActionPermission(ctx);
     var files = new java_io_Files(scripts_path).listFiles(directoryFilter);
     if (files != null) {
@@ -95,7 +114,7 @@
       console.log("Module not found: " + module);
     }
     for (var i in objModule) {
-      if (objModule[i] instanceof Function && !(i.startsWith('_'))) {
+      if (objModule[i] instanceof Function && !(i.startsWith('_')) && !(i == 'getLoggerName')) {
         var str_permission = `${module_name}.${i}`;
         ctx.service("auth").addActionPermission(str_permission, ctx);
         console.log(str_permission);

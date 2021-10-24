@@ -11,26 +11,28 @@
   saveEmployee(args, ctx) {
     ctx.db.update(null, 'saveEmployee', {
       name: "Demo Test Employee 01",
+      username: '*TESTONLY*',
       contactno: "do not contact me",
-      emailaddress: "demotest01@demotest.com",
+      email: "demotest01@demotest.com",
       mobileno: "12345"
     }, ctx);
     var db = ctx.db.get(null, ctx);
     var updated = db.update("saveEmployee", {
       name: "Demo Test Employee 01",
+      username: '*TESTONLY*',
       contactno: "contact me!",
-      emailaddress: "demotest01@demotest.com",
+      email: "demotest01@demotest.com",
       mobileno: "12345"
     });
     return updated;
   },
   getEmployee(args, ctx) {
     log.info(ctx, "Can you see me, {} {}", "Now?", "and Tomorrow?");
-    return ctx.db.selectOne(null, "getEmployee", {"mobileno": "12345"}, ctx);
+    return ctx.db.selectOne(null, "getEmployee", {"mobileno": "kokhoor"}, ctx);
   },
   getEmployees(args, ctx) {
     var params = {
-      "mobileno": ["mobileno", "12345"]
+      "mobileno": ["kokhoor", "*TESTONLY*"]
     };
     console.log("Params: " + params);
     return ctx.db.selectList(null, "getEmployees", params, ctx);

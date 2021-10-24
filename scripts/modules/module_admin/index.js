@@ -20,5 +20,8 @@
   _setup(moduleName, args, system, path, ctx) {
     this._loggername = "modules." + moduleName;
     log.info(this, "Module name: {} my path is: {}", moduleName, path);
+  },
+  getLoggerName() {
+    return this._loggername;
   }
 });

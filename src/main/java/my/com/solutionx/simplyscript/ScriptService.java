@@ -294,13 +294,13 @@ public class ScriptService {
         loader = null;
 
         if (modules != null)
-            modules.cleanUp();
+            modules.invalidateAll();
 
         if (app != null)
             app.clear();
 
         if (cache != null)
-            cache.cleanUp();
+            cache.invalidateAll();
 
         if (system != null) {
             system.clear();

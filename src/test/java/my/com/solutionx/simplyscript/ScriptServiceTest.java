@@ -50,7 +50,9 @@ public class ScriptServiceTest {
         ret = engine.action("CallTest.getEmployees", args);
         System.out.println("getEmployees: " + ret);
 
+        System.out.println("Before system reload");
         engine.reload();
+        System.out.println("After system reload");
 
         ret = engine.action("CallTest.saveEmployee", args);
         System.out.println("saveEmployee: " + ret);

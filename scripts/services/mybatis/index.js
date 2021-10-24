@@ -64,7 +64,7 @@ mybatis.prototype = {
       else
         db.commit();
       db.close();
-      print("postInnderCall Cleaning up DB_NEW db: " + db);
+      // print("postInnderCall Cleaning up DB_NEW db: " + db);
       ctx.req("_dbConnNew").pop();
     }
   },
@@ -77,7 +77,7 @@ mybatis.prototype = {
         else
           db.commit();
         db.close();
-        print("postCall Cleaning up DB_NEW db: " + db);
+        // print("postCall Cleaning up DB_NEW db: " + db);
       }
       ctx.req("_dbConnNew")[i] = null;
     }
@@ -90,7 +90,7 @@ mybatis.prototype = {
         else
           db.commit();
         db.close();
-        print("postCall Cleaning up DB db: " + db);
+        // print("postCall Cleaning up DB db: " + db);
         delete ctx.req("_dbConn")[dbName];
       }
     }
@@ -104,12 +104,12 @@ mybatis.prototype = {
     return factory;
   },
   get(dbName, ctx) {
-    log.info(this, "We are in the mybatis service.");
+// log.info(this, "We are in the mybatis service.");
 // console.log("in db: " + this.call + ":" + this.call + ":" + dbName + ":" + txType + ":" + this.DB + ":" + this.DB_NEW);
 // print(me + ":" + dbName + ":" + txType + ":" + ctx);
 // print(txType + ":" + this + ":" + this.DB + ":" + this.DB_NEW + ":" + this.DB + ":" + this.DB_NEW);
     if (ctx == null)
-      throw new Error("Context must be provided");
+      throw new Error("Context must be provided in second parameter to db get function");
 
     if (ctx.req("_dbConn") == null)
       ctx.req("_dbConn", {});
@@ -127,7 +127,7 @@ mybatis.prototype = {
 // print(me + ":" + dbName + ":" + txType + ":" + ctx);
 // print(txType + ":" + this + ":" + this.DB + ":" + this.DB_NEW + ":" + this.DB + ":" + this.DB_NEW);
     if (ctx == null)
-      throw new Error("Context must be provided");
+      throw new Error("Context must be provided in second parameter to newDb get function");
 
     if (ctx.req("_dbConnNew") == null)
       ctx.req("_dbConnNew", []);
