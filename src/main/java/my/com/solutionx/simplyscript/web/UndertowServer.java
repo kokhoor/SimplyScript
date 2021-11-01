@@ -29,7 +29,9 @@ import io.undertow.server.handlers.form.FormDataParser;
 import io.undertow.server.handlers.form.FormEncodedDataDefinition;
 import io.undertow.server.handlers.form.FormParserFactory;
 import io.undertow.server.handlers.form.MultiPartParserDefinition;
+import io.undertow.util.HeaderValues;
 import io.undertow.util.Headers;
+import io.undertow.util.HttpString;
 import io.undertow.util.PathTemplateMatch;
 import java.io.BufferedReader;
 import java.io.File;
@@ -213,6 +215,18 @@ public class UndertowServer {
                         engine.init(iniMain);
                     }
                 }
+            }
+            exchange.getResponseHeaders().put(
+                    new HttpString("Access-Control-Allow-Credentials"), "true");
+            HeaderValues origin = exchange.getRequestHeaders().get("Origin");
+            if (origin != null && origin.size() > 0) {
+                exchange.getResponseHeaders()
+                    .put(new HttpString("Access-Control-Allow-Origin"),
+                            exchange.getRequestHeaders().get("Origin").get(0));                
+            }
+            if (exchange.getRequestMethod() != null && exchange.getRequestMethod().toString().equals("OPTIONS")) {
+                exchange.getResponseHeaders().put(new HttpString("Access-Control-Allow-Headers"),
+                    "accept, accept-encoding, authorization, content-type, dnt, origin, user-agent, x-csrftoken, x-requested-with");
             }
             exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
             exchange.getResponseSender().send(response);
