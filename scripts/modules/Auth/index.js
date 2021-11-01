@@ -8,7 +8,9 @@
     if (user != null) {
       var token = ctx.service("jwt").encode(user);
       ctx.setReturn("token", token);
-      groups = ctx.db.selectList(null, "auth.getGroups", null, ctx);
+      groups = ctx.db.selectList(null, "auth.getGroups", {
+        username: user.username
+      }, ctx);
     }
     return {
       "user": user,

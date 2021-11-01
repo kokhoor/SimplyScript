@@ -49,6 +49,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.net.ssl.KeyManager;
@@ -57,15 +58,19 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.script.ScriptException;
+import my.com.solutionx.simplyscript.ScriptEngineInterface;
 import my.com.solutionx.simplyscript.ScriptService;
 import my.com.solutionx.simplyscript.ScriptServiceException;
 import org.ini4j.Profile.Section;
 import org.ini4j.Wini;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import stormpot.PoolException;
 
 public class UndertowServer {
     protected static UndertowServer undertow_server = null;
     protected volatile static boolean bStop = false;
+    Section iniMain = null;
 
     private ScriptService engine = null;
     Undertow server = null;
@@ -89,13 +94,24 @@ public class UndertowServer {
             ini_filename = "config.ini";
         }
         Wini ini = new Wini(new File(ini_filename));
-        Section iniMain = ini.get("main");
+        iniMain = ini.get("main");
         engine = new ScriptService();
         engine.init(iniMain);
 
+        Section sectionWeb = ini.get("web");
+        String route = "/api";
+        if (sectionWeb != null) {
+            route = sectionWeb.getOrDefault("route", "/api");
+        }
+
+        if (route.endsWith("/")) {
+            route = route.substring(0, route.length() - 1);
+        }
+
+        String urlMap = String.format("%s/{module}/{method}", route);
         var pathTemplateHandler = Handlers.pathTemplate(false);
-        pathTemplateHandler.add("/api/{module}/{method}", new ScriptCallHandler());
-        
+        pathTemplateHandler.add(urlMap, new ScriptCallHandler());
+
         HttpHandler handlers = new BlockingHandler(pathTemplateHandler);
 
         Builder builder = Undertow.builder();
@@ -183,6 +199,20 @@ public class UndertowServer {
             Map<String, Object> mapReq = new HashMap<>();
             mapReq.put("headers", exchange.getRequestHeaders());
             String response = engine.actionReturnString(module + "." + method, mapArgs, mapReq);
+            List lstCommands = (List)mapReq.get(ScriptEngineInterface.PROCESS_COMMANDS);
+            if (lstCommands != null) {
+                for (var cmd : lstCommands) {
+                    if (cmd == null)
+                        continue;
+                    String command = cmd.toString();
+                    if (command.equalsIgnoreCase("reload")) {
+                        engine = new ScriptService();
+                        engine.init(iniMain);
+                        Logger logger = LoggerFactory.getLogger(this.getClass());
+                        logger.info("Reloading SimplyScript");
+                    }
+                }
+            }
             exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
             exchange.getResponseSender().send(response);
         }

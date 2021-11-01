@@ -1,5 +1,6 @@
+/* global Java */
+
 load(scripts_path + 'system/priority_list.js');
-console.log(PriorityList);
 (function() {
 
 function ctxObject(argLocalContext) {
@@ -66,6 +67,15 @@ ctxObject.prototype = {
     } else { // is get
       return  localContext.req(key);
     }
+  },
+  addReturnCommand(value) {
+    var array_request_commands = Java.type("my.com.solutionx.simplyscript.ScriptEngineInterface").PROCESS_COMMANDS;
+    var arr = this.req(array_request_commands);
+    if (arr == null) {
+      arr = [];
+      this.req(array_request_commands, arr);
+    }
+    arr.push(value);
   },
   setReturn(key, value) {
     var map_return_key = Java.type("my.com.solutionx.simplyscript.ScriptEngineInterface").OTHER_RETURN_DATA;

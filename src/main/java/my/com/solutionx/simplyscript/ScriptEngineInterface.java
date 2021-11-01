@@ -29,6 +29,7 @@ import stormpot.PoolException;
  */
 public interface ScriptEngineInterface {
     public static final String OTHER_RETURN_DATA = "_ss.other_return_data";
+    public static final String PROCESS_COMMANDS = "_ss.commands";
 
     public void init(ScriptService aThis, Map<String, Object> mapScriptConfig) throws ScriptException, IOException;
     public ScriptContextInterface getScriptContext();

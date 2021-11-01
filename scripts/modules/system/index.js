@@ -23,5 +23,11 @@
   },
   getLoggerName() {
     return this._loggername;
+  },
+  reload(args, ctx) {
+    var user = ctx.getUser();
+    if (user == null || !user.is_superuser)
+        raiseError("Not Authorized", "E_NOTAUTHORIZED", ctx.getLoggerName());
+    ctx.addReturnCommand("reload");
   }
 });
