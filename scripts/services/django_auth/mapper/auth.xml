@@ -5,7 +5,7 @@
 <mapper namespace="auth">
 
   <select id="getUserInfo" parameterType="hashmap" resultType="ciMap" fetchSize="1">
-    SELECT username,password,is_superuser,is_active,is_staff
+    SELECT id, username,password,is_superuser,is_active,is_staff
     FROM auth_user
     WHERE username ilike #{username};
   </select>
@@ -15,8 +15,7 @@
     FROM
       auth_group g
       inner join auth_user_groups aug on aug.group_id = g.id
-      inner join auth_user u on u.id = aug.user_id
-    WHERE u.username ilike #{username}
+    WHERE aug.user_id = #{userid}
     ORDER BY 1
   </select>
 

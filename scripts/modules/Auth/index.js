@@ -6,16 +6,16 @@
     var user = ctx.service("auth").verifyUserPassword(args.username, args.password, ctx);
     var groups = null;
     if (user != null) {
+      groups = ctx.db.selectList(null, "auth.getGroups", {
+        userid: user.id
+      }, ctx);
+      user.groups = groups;
       expiration = args.remember ? 30 * 24 * 60 : null;
       var token = ctx.service("jwt").encode(user, expiration);
       ctx.setReturn("token", token);
-      groups = ctx.db.selectList(null, "auth.getGroups", {
-        username: user.username
-      }, ctx);
     }
     return {
-      "user": user,
-      "groups": groups
+      user
     };
   },
   changePassword(args, ctx) {
@@ -46,7 +46,6 @@
     var user = ctx.getUser();
     if (user == null || !user.is_superuser)
         raiseError("Not Authorized", "E_NOTAUTHORIZED", ctx.getLoggerName());
-
     var config = ctx.system("config");
     var module = config["module"];
     var allowed = module.allow;

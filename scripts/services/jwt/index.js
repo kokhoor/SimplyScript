@@ -77,6 +77,8 @@ jwt.prototype = {
 //    console.log(`Token: ${token}`);
     try {
       var claim = jwtConsumer.processToClaims(token);
+      var userObject = claim.getClaimValue("data");
+/*
       var username = claim.getStringClaimValue("username");
       var is_active = claim.getClaimValue("is_active");
       var is_staff = claim.getClaimValue("is_staff");
@@ -90,6 +92,7 @@ jwt.prototype = {
         "is_anonymous": false,
         "expiry": dt
       };
+*/
 // console.log("Trying to set user: " + JSON.stringify(userObject));
       ctx.setUser(userObject, uniqueid);
     } catch (e) {
@@ -100,13 +103,16 @@ jwt.prototype = {
     var claims = new this.JwtClaims();
     claims.setIssuedAtToNow();  // when the token was issued/created (now)
     claims.setIssuer(this.issuer);  // who creates the token and signs it
-    console.log("Expiration in minutes: " + (expiration || this.expiration));
+    // console.log("Expiration in minutes: " + (expiration || this.expiration));
     claims.setExpirationTimeMinutesInTheFuture(expiration || this.expiration); // time when the token will expire (30 minutes from now)
     claims.setGeneratedJwtId(); // a unique identifier for the token
     // claims.setNotBeforeMinutesInThePast(2); // time before which the token is not yet valid (2 minutes ago)
+    /*
     for (var item in args) {
       claims.setClaim(item, args[item]);
     }
+    */
+   claims.setClaim("data", args);
     
     var key = new this.HmacKey(this.secret);
     var jws = new this.JsonWebSignature();
