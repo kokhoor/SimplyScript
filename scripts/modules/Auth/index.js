@@ -6,7 +6,8 @@
     var user = ctx.service("auth").verifyUserPassword(args.username, args.password, ctx);
     var groups = null;
     if (user != null) {
-      var token = ctx.service("jwt").encode(user);
+      expiration = args.remember ? 30 * 24 * 60 : null;
+      var token = ctx.service("jwt").encode(user, expiration);
       ctx.setReturn("token", token);
       groups = ctx.db.selectList(null, "auth.getGroups", {
         username: user.username

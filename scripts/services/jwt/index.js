@@ -96,11 +96,12 @@ jwt.prototype = {
         console.log("Invalid JWT: " + e.message);
     }
   },
-  encode(args) {
+  encode(args, expiration) {
     var claims = new this.JwtClaims();
     claims.setIssuedAtToNow();  // when the token was issued/created (now)
     claims.setIssuer(this.issuer);  // who creates the token and signs it
-    claims.setExpirationTimeMinutesInTheFuture(this.expiration); // time when the token will expire (30 minutes from now)
+    console.log("Expiration in minutes: " + (expiration || this.expiration));
+    claims.setExpirationTimeMinutesInTheFuture(expiration || this.expiration); // time when the token will expire (30 minutes from now)
     claims.setGeneratedJwtId(); // a unique identifier for the token
     // claims.setNotBeforeMinutesInThePast(2); // time before which the token is not yet valid (2 minutes ago)
     for (var item in args) {
