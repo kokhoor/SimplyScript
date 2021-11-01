@@ -13,7 +13,7 @@
       for (var i=0; i<groups.length; i++)
         user.groups.push(groups[i].id);
       expiration = args.remember ? 30 * 24 * 60 : null;
-      var token = ctx.service("jwt").encode(user, expiration);
+      var token = ctx.service("jwt").encode(JSON.stringify(user), expiration);
       ctx.setReturn("token", token);
       delete user.groups;
     }

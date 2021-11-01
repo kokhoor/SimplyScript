@@ -77,7 +77,7 @@ jwt.prototype = {
 //    console.log(`Token: ${token}`);
     try {
       var claim = jwtConsumer.processToClaims(token);
-      var userObject = claim.getClaimValue("data");
+      var userObject = JSON.parse(claim.getClaimValue("data"));
 /*
       var username = claim.getStringClaimValue("username");
       var is_active = claim.getClaimValue("is_active");

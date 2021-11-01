@@ -67,8 +67,14 @@ django_auth.prototype = {
       raiseError("Invalid User Id or Password", "E_USERNAMEPASSWORDINCORRECT",
       this.getLoggerName() + ".verifyPassword");
     }
-    user_record.remove("password");
-    return user_record;
+    // user_record.remove("password");
+    var userObject = {};
+    var fields = ['id', 'username', 'is_superuser', 'is_active', 'is_staff'];
+    for (var i=0; i<fields.length; i++) {
+      userObject[fields[i]] = user_record[fields[i]];
+    }
+
+    return userObject;
   },
   setInactiveActionPermission(ctx) {
     return this.db.update(this.db_name, "auth.setInactiveActionPermission", null, ctx);
