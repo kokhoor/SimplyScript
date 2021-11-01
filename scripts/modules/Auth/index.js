@@ -9,13 +9,16 @@
       groups = ctx.db.selectList(null, "auth.getGroups", {
         userid: user.id
       }, ctx);
-      user.groups = groups;
+      user.groups = [];
+      for (var i=0; i<groups.length; i++)
+        user.groups.push(groups[i].id);
       expiration = args.remember ? 30 * 24 * 60 : null;
       var token = ctx.service("jwt").encode(user, expiration);
       ctx.setReturn("token", token);
     }
     return {
-      user
+      "user": user,
+      "groups": groups
     };
   },
   changePassword(args, ctx) {
