@@ -15,6 +15,7 @@
       expiration = args.remember ? 30 * 24 * 60 : null;
       var token = ctx.service("jwt").encode(user, expiration);
       ctx.setReturn("token", token);
+      delete user.groups;
     }
     return {
       "user": user,
