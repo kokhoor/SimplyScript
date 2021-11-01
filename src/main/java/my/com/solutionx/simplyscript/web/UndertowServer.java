@@ -199,17 +199,18 @@ public class UndertowServer {
             Map<String, Object> mapReq = new HashMap<>();
             mapReq.put("headers", exchange.getRequestHeaders());
             String response = engine.actionReturnString(module + "." + method, mapArgs, mapReq);
-            List lstCommands = (List)mapReq.get(ScriptEngineInterface.PROCESS_COMMANDS);
-            if (lstCommands != null) {
-                for (var cmd : lstCommands) {
+            var objCommands = mapReq.get(ScriptEngineInterface.PROCESS_COMMANDS);
+            if (objCommands != null) {
+                String commands = objCommands.toString();
+                var all_commands = commands.split("\\|");
+                for (var cmd : all_commands) {
                     if (cmd == null)
                         continue;
-                    String command = cmd.toString();
-                    if (command.equalsIgnoreCase("reload")) {
-                        engine = new ScriptService();
-                        engine.init(iniMain);
+                    if (cmd.equalsIgnoreCase("reload")) {
                         Logger logger = LoggerFactory.getLogger(this.getClass());
                         logger.info("Reloading SimplyScript");
+                        engine = new ScriptService();
+                        engine.init(iniMain);
                     }
                 }
             }

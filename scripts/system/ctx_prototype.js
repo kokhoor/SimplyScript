@@ -70,12 +70,13 @@ ctxObject.prototype = {
   },
   addReturnCommand(value) {
     var array_request_commands = Java.type("my.com.solutionx.simplyscript.ScriptEngineInterface").PROCESS_COMMANDS;
-    var arr = this.req(array_request_commands);
-    if (arr == null) {
-      arr = [];
-      this.req(array_request_commands, arr);
+    var str = this.req(array_request_commands);
+    if (str == null) {
+      this.req(array_request_commands, value);
+      return;
     }
-    arr.push(value);
+    str += "|" + value;
+    this.req(array_request_commands, arr);
   },
   setReturn(key, value) {
     var map_return_key = Java.type("my.com.solutionx.simplyscript.ScriptEngineInterface").OTHER_RETURN_DATA;
