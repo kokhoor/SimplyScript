@@ -27,6 +27,7 @@ public class PoolableScriptContext extends BasePoolable {
         super(slot);
         this.global = global;
         ctx = global.getScriptContext();
+// System.out.println("PoolableScriptContext getScriptContext: " + ctx);
         ctx.init();
     }
 

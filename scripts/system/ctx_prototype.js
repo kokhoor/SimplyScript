@@ -5,8 +5,10 @@ load(scripts_path + 'system/priority_list.js');
 
 function ctxObject(argLocalContext) {
   localContext = argLocalContext;
-  this.callDepth = -1;
-  this.callStack = [];
+  this._callData = {
+    "depth": -1,
+    "stack": []
+  };
   user = {
     "username": "anonymous",
     "is_active": false,
@@ -18,9 +20,9 @@ function ctxObject(argLocalContext) {
 
 ctxObject.prototype = {
   getLoggerName() {
-    if (this.callStack.length == 0)
+    if (this._callData.stack.length == 0)
       return "context";
-    return "modules." + this.callStack[this.callStack.length-1];
+    return "modules." + this._callData.stack[this._callData.stack.length-1];
   },
   getUser() {
     return user;
@@ -87,15 +89,20 @@ ctxObject.prototype = {
     }
     map[key] = value;
   },
+  callDepth() {
+    return this._callData.depth;
+  },
   call(action, args) {
     var idx = action.lastIndexOf(".");
     if (idx === -1)
       throw new Error("Invalid action format. Expected XXX.YYY");
 
-    this.callDepth += 1;
-    this.callStack.push(action);
+console.log(`Before Call: ${action} Depth: ${this._callData.depth} Call Stack length: ${this._callData.stack.length} ${localContext}`)
+    this._callData.depth += 1;
+    this._callData.stack.push(action);
+console.log(`Call: ${action} Depth: ${this._callData.depth} Call Stack length: ${this._callData.stack.length} ${localContext}`)
     try {
-      var preCall = this.callDepth <= 0 ? localContext.system("preCall") : localContext.system("preInnerCall");
+      var preCall = this._callData.depth <= 0 ? localContext.system("preCall") : localContext.system("preInnerCall");
       if (preCall !== null) {
         for (var i=0; i<preCall.items.length; i++) {
           try {
@@ -115,7 +122,7 @@ ctxObject.prototype = {
 
       var ret = objModule[method](args, this);
 
-      var postCall = this.callDepth <= 0 ? localContext.system("postCall") : localContext.system("postInnerCall");
+      var postCall = this._callData.depth <= 0 ? localContext.system("postCall") : localContext.system("postInnerCall");
       if (postCall !== null) {
         for (var i=0; i<postCall.items.length; i++) {
           try {
@@ -128,7 +135,7 @@ ctxObject.prototype = {
 
       return ret;
     } catch (e) {
-      var postCall = this.callDepth <= 0 ? localContext.system("postCall") : localContext.system("postInnerCall");
+      var postCall = this._callData.depth <= 0 ? localContext.system("postCall") : localContext.system("postInnerCall");
       if (postCall !== null) {
         for (var i=0; i<postCall.items.length; i++) {
           try {
@@ -140,8 +147,8 @@ ctxObject.prototype = {
       }
       throw e;
     } finally {
-      this.callDepth -= 1;
-      this.callStack.pop();
+      this._callData.depth -= 1;
+      this._callData.stack.pop();
     }
   },
   service(name) {

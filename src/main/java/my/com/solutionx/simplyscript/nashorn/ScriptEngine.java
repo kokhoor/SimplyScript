@@ -233,11 +233,16 @@ public class ScriptEngine implements ScriptEngineInterface {
     public Map<String, Object> action(String action, Object args, Map<String, Object> mapReq) throws ScriptException, PoolException, InterruptedException {
         Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
         PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
+        if (scriptContext == null) {
+            throw new ScriptException("FTimeout trying to execute script");
+        }
+// System.out.println("Getting PoolableScriptContext: "+ scriptContext + ":" + scriptContext.getScriptContext());
         scriptContext.getScriptContext().setRequest(mapReq);
 
         try {
-            // ScriptObjectMirror ctx = (ScriptObjectMirror)ctxObject.newObject(scriptContext.getScriptContext());
-            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.call(null, scriptContext.getScriptContext());
+            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.newObject(scriptContext.getScriptContext());
+//            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.newObject(null, scriptContext.getScriptContext());
+//System.out.println("ctx: " + ctx);
             Object ret = ctx.callMember("call", action, args);
             Map<String, Object> map = (Map<String, Object>) scriptContext.getScriptContext().req(OTHER_RETURN_DATA);
             if (map == null)
@@ -246,6 +251,7 @@ public class ScriptEngine implements ScriptEngineInterface {
                 map.put("data", ret);
             return map;
         } finally {
+//System.out.print("in action finally: " + scriptContext);
             if (scriptContext != null) {
               scriptContext.release();
             }

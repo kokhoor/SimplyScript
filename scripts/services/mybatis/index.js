@@ -56,42 +56,57 @@ mybatis.prototype = {
 
     for (var i=ctx.req("_dbConnNew").length-1; i>=0; i--) {
       var db = ctx.req("_dbConnNew")[i];
-      if (db.depth < ctx.callDepth)
+      if (db.depth < ctx.callDepth())
         break;
 
-      if (e != null)
-        db.rollback();
-      else
-        db.commit();
-      db.close();
-      // print("postInnderCall Cleaning up DB_NEW db: " + db);
+      console.log("postInnerCall Cleaning up DB_NEW db: " + db + ":" + ctx.req("_dbConnNew"));
+      try {
+        if (e != null)
+          db.rollback();
+        else
+          db.commit();
+      } catch (e) {}
+      try {
+        db.close();
+      } catch (e) {}
       ctx.req("_dbConnNew").pop();
+      console.log("postInnerCall Cleaned up DB_NEW db: " + db + ":" + ctx.req("_dbConnNew"));
     }
   },
   postCall(ctx, e) {
     if (ctx.req("_dbConnNew") != null) {
       for (var i=ctx.req("_dbConnNew").length-1; i>=0; i--) {
         var db = ctx.req("_dbConnNew")[i];
-        if (e != null)
-          db.rollback();
-        else
-          db.commit();
-        db.close();
-        // print("postCall Cleaning up DB_NEW db: " + db);
+        console.log("postCall Cleaning up DB_NEW db: " + db);
+        try {
+          if (e != null)
+            db.rollback();
+          else
+            db.commit();
+        } catch (e) {}
+        try {
+          db.close();
+        } catch (e) {}
       }
       ctx.req("_dbConnNew")[i] = null;
-    }
+      console.log("postCall Cleaned up DB_NEW db: " + db);
+      }
 
     if (ctx.req("_dbConn") != null) {
       for (var dbName in ctx.req("_dbConn")) {
         var db = ctx.req("_dbConn")[dbName];
-        if (e != null)
-          db.rollback();
-        else
-          db.commit();
-        db.close();
-        // print("postCall Cleaning up DB db: " + db);
+        console.log("postCall Cleaning up DB db: " + db + ":" + dbName);
+        try {
+          if (e != null)
+            db.rollback();
+          else
+            db.commit();
+        } catch (e) {}
+        try {
+          db.close();
+        } catch (e) {}
         delete ctx.req("_dbConn")[dbName];
+        console.log("postCall Cleaned up DB db: " + db + ":" + dbName);
       }
     }
   },

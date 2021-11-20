@@ -200,7 +200,12 @@ public class UndertowServer {
             // System.out.printf("Args: %s%n", mapArgs);
             Map<String, Object> mapReq = new HashMap<>();
             mapReq.put("headers", exchange.getRequestHeaders());
-            String response = engine.actionReturnString(module + "." + method, mapArgs, mapReq);
+            String response = null;
+            try {
+                response = engine.actionReturnString(module + "." + method, mapArgs, mapReq);
+            } catch (Exception e) {
+                System.out.println("OOPS");
+            }
             var objCommands = mapReq.get(ScriptEngineInterface.PROCESS_COMMANDS);
             if (objCommands != null) {
                 String commands = objCommands.toString();
