@@ -65,5 +65,13 @@
   },
   test2(args, ctx) {
     return {"a": 5, "b": 6, "c": [1,2,3], "d": {"x":0, "y": 10}};
+  },
+  email(args, ctx) {
+    return ctx.service("email").send({
+      "profile": "default",
+      "to": "", // comma separated email addresses
+      "subject": "This is an OTP Test",
+      "text": "Congratulations, you received OTP from us: 123456 from SimplyScript"
+    }, ctx);
   }
 });

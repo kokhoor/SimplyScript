@@ -108,8 +108,8 @@ public class ScriptEngine implements ScriptEngineInterface {
         PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
         try {
             // ScriptObjectMirror ctxObject = (ScriptObjectMirror) ((NashornScriptContext)scriptContext.getScriptContext()).ctxObject();
-            // ScriptObjectMirror ctx = (ScriptObjectMirror)ctxObject.newObject(scriptContext.getScriptContext());
-            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.call(null, scriptContext.getScriptContext());
+            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxObject.newObject(scriptContext.getScriptContext());
+            // ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.call(null, scriptContext.getScriptContext());
             services.forEach(name -> {
                 ctx.callMember("service", name);
             });
@@ -125,8 +125,8 @@ public class ScriptEngine implements ScriptEngineInterface {
         PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
         try {
             // ScriptObjectMirror ctxObject = (ScriptObjectMirror) ((NashornScriptContext)scriptContext.getScriptContext()).ctxObject();
-            //ScriptObjectMirror ctx = (ScriptObjectMirror)ctxObject.newObject(scriptContext.getScriptContext());
-            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.call(null, scriptContext.getScriptContext());
+            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxObject.newObject(scriptContext.getScriptContext());
+            // ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.call(null, scriptContext.getScriptContext());
             return ctx.callMember("service", name);
         } finally {
             if (scriptContext != null) {
@@ -143,8 +143,8 @@ public class ScriptEngine implements ScriptEngineInterface {
         PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
         try {
             // ScriptObjectMirror ctxObject = (ScriptObjectMirror) ((NashornScriptContext)scriptContext.getScriptContext()).ctxObject();
-            //ScriptObjectMirror ctx = (ScriptObjectMirror)ctxObject.newObject(scriptContext.getScriptContext());
-            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.call(null, scriptContext.getScriptContext());
+            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxObject.newObject(scriptContext.getScriptContext());
+            // ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.call(null, scriptContext.getScriptContext());
             modules.forEach(name -> {
                 ctx.callMember("module", name);
             });
@@ -160,8 +160,8 @@ public class ScriptEngine implements ScriptEngineInterface {
         PoolableScriptContext scriptContext = scriptService.get().getScriptContextPool().claim(timeout);
         try {
             // ScriptObjectMirror ctxObject = (ScriptObjectMirror) ((NashornScriptContext)scriptContext.getScriptContext()).ctxObject();
-            // ScriptObjectMirror ctx = (ScriptObjectMirror)ctxObject.newObject(scriptContext.getScriptContext());
-            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.call(null, scriptContext.getScriptContext());
+            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxObject.newObject(scriptContext.getScriptContext());
+            // ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.call(null, scriptContext.getScriptContext());
             return ctx.callMember("module", name);
         } finally {
             if (scriptContext != null) {
@@ -236,12 +236,13 @@ public class ScriptEngine implements ScriptEngineInterface {
         if (scriptContext == null) {
             throw new ScriptException("FTimeout trying to execute script");
         }
-// System.out.println("Getting PoolableScriptContext: "+ scriptContext + ":" + scriptContext.getScriptContext());
+// System.out.println("Getting PoolableScriptContext: "+ scriptContext + ":" + scriptContext.getScriptContext() + ":" + mapReq);
         scriptContext.getScriptContext().setRequest(mapReq);
 
         try {
-            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.newObject(scriptContext.getScriptContext());
-//            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.newObject(null, scriptContext.getScriptContext());
+            // ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.newObject(scriptContext.getScriptContext());
+            ScriptObjectMirror ctx = (ScriptObjectMirror)ctxObject.newObject(scriptContext.getScriptContext());
+            // ScriptObjectMirror ctx = (ScriptObjectMirror)ctxConstructor.call(null, scriptContext.getScriptContext());
 //System.out.println("ctx: " + ctx);
             Object ret = ctx.callMember("call", action, args);
             Map<String, Object> map = (Map<String, Object>) scriptContext.getScriptContext().req(OTHER_RETURN_DATA);

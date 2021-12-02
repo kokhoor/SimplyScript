@@ -244,8 +244,11 @@ ctxObject.moduleSetup = function (moduleName, system, ctx) {
   }
   var path = `${this._config.module.path}/${scriptName}/`;
   var module = load(path + 'index.js');
+  if ("_init" in module)
+    module._init();
+
   if ("_setup" in module) {
-    var args = this._config.service.initArguments[moduleName] || {};
+    var args = this._config.module.initArguments[moduleName] || {};
     setupData = module._setup(moduleName, args, system, path, ctx);
   }
   return module;

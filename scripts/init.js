@@ -86,8 +86,10 @@ String.prototype.delimit_quotes = function () {
 
 //print("Load dayjs");
 load(scripts_path + 'lib/dayjs.min.js');
-load(scripts_path + 'lib/dayjs.customParseFormat.js');
+load(scripts_path + 'lib/dayjs.customParseFormat.min.js');
+load(scripts_path + 'lib/dayjs.utc.min.js');
 dayjs.extend(dayjs_plugin_customParseFormat);
+dayjs.extend(dayjs_plugin_utc);
 /*
 console.log(dayjs("12-25-1995", "MM-DD-YYYY").format("DD MMM YYYY HH:mm:ss"));
 print("Load numeral");
