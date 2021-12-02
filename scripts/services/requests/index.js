@@ -48,10 +48,10 @@ requests.prototype = {
     }
   },
   get(args, ctx) {
-    return this.requests.get(args)
+    return this.requests.get(args);
   },
   post(args, ctx) {
-    return this.requests.post(args)
+    return this.requests.post(args);
   },
 };
 

@@ -32,8 +32,7 @@ email.prototype = {
     var profile = this.profiles[args.profile || 'default'];
     switch (profile.type) {
       case 'alicloud':
-        this.sendAlicloud(args, ctx);
-        break;
+        return this.sendAlicloud(args, ctx);
       default:
         throw new Error("Invalid email profile / profile type");
     }
@@ -77,17 +76,33 @@ email.prototype = {
     var calc_str = "";
     Object.keys(parameters).sort().forEach(
   	  (key) => { 
-  	  	calc_str += encodeURIComponent(key) + "=" + parameters[encodeURIComponent(key)] + "&";
+  	  	calc_str += encodeURIComponent(key) + "=" + encodeURIComponent(parameters[key]) + "&";
   	  }, 
   	  {}
-	);
-	calc_str = calc_str.substring(0, calc_str.length - 1);
-    calc_str = calc_str.replace(/\+/g, '%252B');
+	  );
+	  calc_str = calc_str.substring(0, calc_str.length - 1);
+    calc_str = calc_str.replace(/\+/g, '%2B');
     calc_str = calc_str.replace(/\*/g, '%2A');
     calc_str = calc_str.replace(/\%7E/g, '~');
-    calc_str = unescape(calc_str);
+    calc_str = calc_str.replace(/\%/g, '%25');
+    calc_str = calc_str.replace(/&/g, '%26');
+    calc_str = calc_str.replace(/=/g, '%3D');
+/*
+    calc_str = calc_str.replace(/\%40/g, '%2540');
+    calc_str = calc_str.replace(/\%3C/g, '%253C');
+    calc_str = calc_str.replace(/\%3E/g, '%253E');
+    calc_str = calc_str.replace(/\%20/g, '%2520');
+    calc_str = calc_str.replace(/\%3A/g, '%253A');
+    calc_str = calc_str.replace(/\%2F/g, '%252F');
+    calc_str = calc_str.replace(/\%2C/g, '%252C');
+    calc_str = calc_str.replace(/\%2B/g, '%252B');
+*/
+    // calc_str = unescape(calc_str);
+/*
     calc_str = calc_str.replace(/\+/g, '%252B');
-    calc_str = calc_str.replace(/\*/g, '%2A');
+*/
+//    calc_str = calc_str.replace(/\*/g, '%2A');
+/*
     calc_str = calc_str.replace(/\%7E/g, '~');
     calc_str = calc_str.replace(/\=/g, '%3D');
     calc_str = calc_str.replace(/\&/g, '%26');
@@ -98,6 +113,9 @@ email.prototype = {
     calc_str = calc_str.replace(/\[/g, '%255B%2527');
     calc_str = calc_str.replace(/\]/g, '%2527%255D');
     calc_str = calc_str.replace(/\%2B/g, '%252B');
+    calc_str = calc_str.replace(/\</g, "%253C");
+    calc_str = calc_str.replace(/\>/g, "%253E");
+*/
     calc_str = "POST&%2F&" + calc_str;
 
     const HmacUtils = Java.type("org.apache.commons.codec.digest.HmacUtils");
@@ -107,7 +125,9 @@ email.prototype = {
     signature = Base64.encodeBase64String(signature);
 	  parameters["Signature"] = signature;
 
-    return ctx.service("requests").post({
+    // console.log(calc_str);
+    // console.log(signature);
+    var ret = ctx.service("requests").post({
       url: url,
       data: parameters,
       headers: {
@@ -115,6 +135,7 @@ email.prototype = {
 	    'Host': host
       }
     }, ctx);
+    return ret;
   }
 };
 
